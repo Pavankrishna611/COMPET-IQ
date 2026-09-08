@@ -1,0 +1,1 @@
+"""COMPETIQ Backend Application Package."""

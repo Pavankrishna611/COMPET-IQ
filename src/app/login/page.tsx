@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { Role } from '@/types';
 import { Input, Button, Badge } from '@/components/ui';
@@ -21,17 +22,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setIsLoading(true);
-    setTimeout(() => {
-      loginWithCredentials(officialId || 'arjun.kumar@mospi.gov.in', password || 'demo123');
-    }, 400);
+    try {
+      await loginWithCredentials(
+        officialId || 'arjun.kumar@mospi.gov.in',
+        password || 'demo123'
+      );
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRoleSelect = (role: Role) => {
-    loginAsRole(role);
+  const handleRoleSelect = async (role: Role) => {
+    setErrorMessage(null);
+    try {
+      await loginAsRole(role);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Could not sign in with role.');
+    }
   };
 
   return (
@@ -171,6 +186,12 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+            {errorMessage && (
+              <div className="p-3 bg-critical-light border border-critical/30 rounded-btn text-xs text-critical font-medium flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{errorMessage}</span>
+              </div>
+            )}
             <Input
               label="Official ID / Email"
               placeholder="e.g. arjun.kumar@mospi.gov.in"
@@ -234,6 +255,17 @@ export default function LoginPage() {
               >
                 Continue with SSO (Jan Parichay)
               </Button>
+            </div>
+
+            {/* Registration Entry Point */}
+            <div className="pt-2 text-center text-xs text-text-secondary">
+              <span>New to COMPETIQ? </span>
+              <Link
+                href="/register"
+                className="font-semibold text-primary hover:text-primary-dark hover:underline transition-colors ml-1"
+              >
+                Create Account
+              </Link>
             </div>
           </form>
 

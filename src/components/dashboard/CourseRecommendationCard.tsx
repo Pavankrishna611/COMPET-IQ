@@ -88,7 +88,8 @@ export function DashboardCourseCard({ course }: DashboardCourseCardProps) {
   );
 }
 
-export function RecommendationsSection() {
+export function RecommendationsSection({ recommendations }: { recommendations?: CourseRecommendationItem[] }) {
+  const displayCourses = recommendations && recommendations.length > 0 ? recommendations : topAiCourseRecommendations;
   return (
     <div className="space-y-3.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -114,7 +115,7 @@ export function RecommendationsSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {topAiCourseRecommendations.map((course) => (
+        {displayCourses.map((course) => (
           <DashboardCourseCard key={course.id} course={course} />
         ))}
       </div>

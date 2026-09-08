@@ -6,7 +6,15 @@ import { Badge } from '@/components/ui/Badge';
 import { roleContextData } from '@/data/skillGaps';
 import { Briefcase, Building2, Layers, Sparkles, CheckCircle2 } from 'lucide-react';
 
-export function RoleContextCard() {
+export interface RoleContextCardProps {
+  roleTitle?: string;
+  departmentName?: string;
+}
+
+export function RoleContextCard({ roleTitle, departmentName }: RoleContextCardProps = {}) {
+  const displayRole = roleTitle || roleContextData.role;
+  const displayDept = departmentName || `${roleContextData.department} (${roleContextData.division})`;
+
   return (
     <Card className="p-5 bg-surface border-border shadow-card flex flex-col lg:flex-row lg:items-center justify-between gap-4">
       <div className="space-y-2">
@@ -26,11 +34,11 @@ export function RoleContextCard() {
         <div className="flex flex-wrap items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5 font-bold text-text-primary">
             <Briefcase className="w-4 h-4 text-primary shrink-0" />
-            Role: {roleContextData.role}
+            Role: {displayRole}
           </span>
           <span className="flex items-center gap-1.5 font-medium text-text-secondary">
             <Building2 className="w-4 h-4 text-teal shrink-0" />
-            Dept: {roleContextData.department} ({roleContextData.division})
+            Dept: {displayDept}
           </span>
         </div>
 

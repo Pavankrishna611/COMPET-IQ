@@ -47,18 +47,48 @@ const DEFAULT_FILTERS: AdminFiltersState = {
   role: 'All Roles',
 };
 
+import { useEffect } from 'react';
+import { analyticsService } from '@/services';
+import type { DashboardAnalyticsResponse } from '@/types/api';
+
 export default function AdminDashboardPage() {
   const [filters, setFilters] = useState<AdminFiltersState>(DEFAULT_FILTERS);
+  const [apiAnalytics, setApiAnalytics] = useState<DashboardAnalyticsResponse | null>(null);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const data = await analyticsService.getDashboardAnalytics();
+        setApiAnalytics(data);
+      } catch (err) {
+        console.warn('Using fallback admin dashboard analytics:', err);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
 
   // Compute filtered department health items
-  const filteredDepartments = useMemo(() => {
+  const filteredDepartments: DepartmentSkillHealthItem[] = useMemo(() => {
+    const baseList: DepartmentSkillHealthItem[] = apiAnalytics?.department_health && apiAnalytics.department_health.length > 0
+      ? apiAnalytics.department_health.map((d, idx) => ({
+          id: d.department_id || `dept-${idx}`,
+          department: d.department,
+          officials: d.total_officers || 40,
+          averageCompetency: Math.round(d.average_competency),
+          criticalGaps: Math.round(d.critical_gaps),
+          trainingCompletion: Math.round(d.assessed_pct),
+          status: d.average_competency >= 75 ? ('Strong' as const) : d.average_competency >= 65 ? ('Good' as const) : ('Needs Attention' as const),
+        }))
+      : mockDepartmentHealth;
+
     if (filters.department === 'All Departments') {
-      return mockDepartmentHealth;
+      return baseList;
     }
-    return mockDepartmentHealth.filter(
+    return baseList.filter(
       (dept) => dept.department.toLowerCase() === filters.department.toLowerCase()
     );
-  }, [filters.department]);
+  }, [filters.department, apiAnalytics]);
 
   // Dynamic metrics based on selected department or global view
   const activeMetrics = useMemo(() => {
@@ -99,25 +129,29 @@ export default function AdminDashboardPage() {
         ? 0.05
         : 1.0;
 
-    const baseOfficials = Math.round(12540 * roleMultiplier);
-    const baseLearners = Math.round(8231 * roleMultiplier);
+    const baseOfficials = apiAnalytics
+      ? Math.round(apiAnalytics.total_officers * roleMultiplier)
+      : Math.round(12540 * roleMultiplier);
+    const baseLearners = apiAnalytics
+      ? Math.round(apiAnalytics.active_learners * roleMultiplier)
+      : Math.round(8231 * roleMultiplier);
 
     return {
       officials: baseOfficials.toLocaleString(),
       officialsSub:
         filters.role === 'All Roles'
-          ? 'Across 6 departments'
+          ? (apiAnalytics ? `${apiAnalytics.total_officers} registered officials` : 'Across 6 departments')
           : `Active in ${filters.role} cadre`,
       activeLearners: baseLearners.toLocaleString(),
       learnersSub: '65.6% workforce engagement',
-      avgCompetency: '72%',
+      avgCompetency: apiAnalytics ? `${Math.round(apiAnalytics.average_competency_score)}%` : '72%',
       avgSub: 'Across competency framework',
-      criticalGap: '18%',
+      criticalGap: apiAnalytics ? `${Math.round(apiAnalytics.critical_skill_gaps)}%` : '18%',
       criticalGapSub: 'Officials below required competency',
-      completion: '76%',
+      completion: apiAnalytics ? `${Math.round(apiAnalytics.learning_completion_rate)}%` : '76%',
       completionSub: 'Assigned learning completed',
     };
-  }, [filters.department, filters.role]);
+  }, [filters.department, filters.role, apiAnalytics]);
 
   // Adjust skill gaps based on selected department or role
   const filteredSkillGaps = useMemo(() => {

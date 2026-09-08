@@ -42,7 +42,8 @@ const CustomRadarTooltip = ({ active, payload }: CustomTooltipProps) => {
   return null;
 };
 
-export function CompetencyRadarChart() {
+export function CompetencyRadarChart({ data }: { data?: typeof competencyRadarData }) {
+  const chartData = data && data.length > 0 ? data : competencyRadarData;
   return (
     <Card className="p-5 lg:p-6 shadow-card border-border">
       <CardHeader className="p-0 pb-5">
@@ -60,7 +61,7 @@ export function CompetencyRadarChart() {
               NSSTA Framework
             </Badge>
             <Badge variant="neutral" size="sm">
-              8 Assessed Vectors
+              {chartData.length} Assessed Vectors
             </Badge>
           </div>
         </div>
@@ -71,7 +72,7 @@ export function CompetencyRadarChart() {
           {/* Left: Recharts Radar Chart */}
           <div className="lg:col-span-7 w-full h-[320px] sm:h-[350px] relative">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={competencyRadarData}>
+              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
                 <PolarGrid stroke="#E2E8F0" strokeDasharray="3 3" />
                 <PolarAngleAxis
                   dataKey="domain"

@@ -29,13 +29,13 @@ export function AppShell({
 }: AppShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { role, currentUser, isAuthenticated } = useAuth();
+  const { role, currentUser, isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   // Route Protection & Role Guard (Section 9)
   useEffect(() => {
-    if (disableRouteProtection) return;
+    if (disableRouteProtection || isLoading) return;
 
     // If not authenticated, redirect to /login
     if (!isAuthenticated) {
@@ -51,10 +51,10 @@ export function AppShell({
     } else if (role === 'trainer' && (pathname.startsWith('/learner') || pathname.startsWith('/admin'))) {
       router.replace('/trainer/assessment-generator');
     }
-  }, [isAuthenticated, role, pathname, router, disableRouteProtection]);
+  }, [isAuthenticated, isLoading, role, pathname, router, disableRouteProtection]);
 
   // Loading state before auth verification on protected pages
-  if (!disableRouteProtection && !isAuthenticated) {
+  if (!disableRouteProtection && (isLoading || !isAuthenticated)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

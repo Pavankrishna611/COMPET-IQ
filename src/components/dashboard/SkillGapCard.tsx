@@ -143,7 +143,8 @@ export function DashboardSkillGapCard({ gapItem }: DashboardSkillGapCardProps) {
   );
 }
 
-export function SkillGapsSection() {
+export function SkillGapsSection({ gaps }: { gaps?: PrioritySkillGapItem[] }) {
+  const displayGaps = gaps && gaps.length > 0 ? gaps : prioritySkillGaps;
   return (
     <div className="space-y-3.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -164,7 +165,7 @@ export function SkillGapsSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {prioritySkillGaps.map((gap: PrioritySkillGapItem) => (
+        {displayGaps.map((gap: PrioritySkillGapItem) => (
           <DashboardSkillGapCard key={gap.id} gapItem={gap} />
         ))}
       </div>

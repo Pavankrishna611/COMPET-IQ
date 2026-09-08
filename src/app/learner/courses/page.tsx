@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   BookOpen, 
@@ -9,7 +9,8 @@ import {
   ArrowRight, 
   FilterX, 
   BookmarkCheck,
-  Compass
+  Compass,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -20,6 +21,8 @@ import {
   CourseFilterState, 
   ExplorerCourseCard 
 } from '@/components/courses';
+import { courseService } from '@/services';
+import type { CourseResponse } from '@/types/api';
 
 const INITIAL_FILTERS: CourseFilterState = {
   searchQuery: '',
@@ -37,9 +40,106 @@ export default function LearnerCoursesPage() {
   const [filters, setFilters] = useState<CourseFilterState>(INITIAL_FILTERS);
   const [visibleCount, setVisibleCount] = useState<number>(ITEMS_PER_PAGE);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [coursesList, setCoursesList] = useState<DetailedCourse[]>(mockDetailedCourses);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchBackendCourses = async () => {
+      try {
+        setIsLoading(true);
+        const res = await courseService.getCourses();
+        if (res && res.length > 0) {
+          const dynamicCourses: DetailedCourse[] = res.map((c: CourseResponse, idx: number) => {
+            const providerVal: DetailedCourse['provider'] = c.provider?.includes('iGOT')
+              ? 'iGOT Karmayogi'
+              : c.provider?.includes('NSSTA')
+              ? 'NSSTA / TPAC'
+              : 'COMPETIQ Learning';
+
+            const domainVal: DetailedCourse['domain'] = c.domain?.includes('Tech')
+              ? 'Technical'
+              : c.domain?.includes('Gov')
+              ? 'Digital Governance'
+              : c.domain?.includes('Beh')
+              ? 'Behavioural'
+              : 'Statistical Methods';
+
+            const diffMap: Record<string, 'Beginner' | 'Intermediate' | 'Advanced'> = {
+              BEGINNER: 'Beginner',
+              INTERMEDIATE: 'Intermediate',
+              ADVANCED: 'Advanced',
+              Beginner: 'Beginner',
+              Intermediate: 'Intermediate',
+              Advanced: 'Advanced',
+            };
+
+            return {
+              id: c.id,
+              title: c.title,
+              provider: providerVal,
+              domain: domainVal,
+              difficulty: diffMap[c.difficulty] || 'Intermediate',
+              duration: `${c.duration_hours || 12} Hours`,
+              durationHours: c.duration_hours || 12,
+              rating: 4.8,
+              enrolledCount: 142,
+              isRecommended: true,
+              recommendationScore: 94,
+              whyRecommended: 'Aligned with MoSPI official capacity building guidelines.',
+              skills: c.competencies && c.competencies.length > 0
+                ? c.competencies.map((comp: any) => comp.competency_name)
+                : ['Statistical Analysis', 'MoSPI Protocols'],
+              description: c.description || 'Comprehensive training module aligned with cadre competency standards.',
+              learningObjectives: [
+                'Understand core theoretical principles and administrative workflows',
+                'Apply practical tools to official survey pipelines',
+                'Comply with National Statistical System standards',
+              ],
+              prerequisites: c.prerequisites?.map((p: any) => p.prerequisite_title) || ['Basic Office Computing'],
+              modules: [
+                {
+                  id: `m-${c.id}-1`,
+                  moduleNumber: 1,
+                  title: 'Foundations & Concepts',
+                  duration: '4 Hours',
+                  description: 'Core concepts and background.',
+                },
+                {
+                  id: `m-${c.id}-2`,
+                  moduleNumber: 2,
+                  title: 'Practical Application',
+                  duration: '8 Hours',
+                  description: 'Hands-on survey data analysis.',
+                },
+              ],
+              expectedImprovement: {
+                competency: c.competencies?.[0]?.competency_name || 'Statistical Domain',
+                from: 'Level 2.0',
+                to: 'Level 4.0',
+              },
+              relatedCourseIds: [],
+            };
+          });
+
+          // Deduplicate by course id or title
+          const existingTitles = new Set(dynamicCourses.map((c) => c.title.toLowerCase()));
+          const remainingMock = mockDetailedCourses.filter(
+            (m) => !existingTitles.has(m.title.toLowerCase())
+          );
+          setCoursesList([...dynamicCourses, ...remainingMock]);
+        }
+      } catch (err) {
+        console.warn('Using fallback courses list:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBackendCourses();
+  }, []);
 
   const handleToggleBookmark = (courseId: string, isSaved: boolean) => {
-    const course = mockDetailedCourses.find((c) => c.id === courseId);
+    const course = coursesList.find((c) => c.id === courseId);
     const title = course ? course.title : 'Course';
     setToastMessage(isSaved ? `Added "${title}" to your saved courses` : `Removed "${title}" from saved courses`);
     setTimeout(() => {
@@ -49,7 +149,7 @@ export default function LearnerCoursesPage() {
 
   // Filter and sort courses
   const filteredCourses = useMemo(() => {
-    return mockDetailedCourses.filter((course) => {
+    return coursesList.filter((course) => {
       // Search query
       if (filters.searchQuery.trim()) {
         const query = filters.searchQuery.toLowerCase();
@@ -105,7 +205,7 @@ export default function LearnerCoursesPage() {
       }
       return 0;
     });
-  }, [filters]);
+  }, [filters, coursesList]);
 
   const displayedCourses = filteredCourses.slice(0, visibleCount);
   const hasMore = visibleCount < filteredCourses.length;
@@ -167,7 +267,7 @@ export default function LearnerCoursesPage() {
               Personalized Learning Trajectory Active
             </h4>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              You have an active 6-stage roadmap targeting your 4 key skill gaps.
+              You have an active roadmap targeting your key competency gaps.
             </p>
           </div>
         </div>
@@ -186,7 +286,7 @@ export default function LearnerCoursesPage() {
           setFilters(newFilters);
           setVisibleCount(ITEMS_PER_PAGE);
         }}
-        totalCourses={mockDetailedCourses.length}
+        totalCourses={coursesList.length}
         filteredCount={filteredCourses.length}
       />
 

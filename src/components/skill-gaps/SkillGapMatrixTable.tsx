@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { skillGapMatrixData, SkillGapMatrixItem } from '@/data/skillGaps';
 import { Table, ArrowRight, ArrowUpRight } from 'lucide-react';
 
-export function SkillGapMatrixTable() {
+export function SkillGapMatrixTable({ data }: { data?: typeof skillGapMatrixData }) {
+  const displayData = data && data.length > 0 ? data : skillGapMatrixData;
   const getPriorityBadge = (priority: SkillGapMatrixItem['priority']) => {
     switch (priority) {
       case 'CRITICAL':
@@ -51,7 +52,7 @@ export function SkillGapMatrixTable() {
             </div>
           </div>
           <Badge variant="neutral" size="sm">
-            {skillGapMatrixData.length} Target Vectors
+            {displayData.length} Target Vectors
           </Badge>
         </div>
       </CardHeader>
@@ -86,7 +87,7 @@ export function SkillGapMatrixTable() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-light">
-              {skillGapMatrixData.map((row) => (
+              {displayData.map((row) => (
                 <tr
                   key={row.id}
                   className="hover:bg-[#F8FAFC]/80 transition-colors duration-150"
@@ -130,7 +131,7 @@ export function SkillGapMatrixTable() {
 
         {/* Mobile Cards Fallback */}
         <div className="md:hidden space-y-3">
-          {skillGapMatrixData.map((row) => (
+          {displayData.map((row) => (
             <div
               key={row.id}
               className="p-3.5 bg-[#F8FAFC] border border-border-light rounded-btn space-y-2.5"

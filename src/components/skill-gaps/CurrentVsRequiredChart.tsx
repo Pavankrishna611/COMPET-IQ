@@ -57,7 +57,8 @@ const CustomBarTooltip = ({ active, payload }: CustomTooltipProps) => {
   return null;
 };
 
-export function CurrentVsRequiredChart() {
+export function CurrentVsRequiredChart({ data }: { data?: ComparisonChartItem[] }) {
+  const chartData = data && data.length > 0 ? data : currentVsRequiredChartData;
   return (
     <Card className="p-5 lg:p-6 border-border shadow-card">
       <CardHeader className="p-0 pb-5">
@@ -82,11 +83,11 @@ export function CurrentVsRequiredChart() {
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="w-full h-[360px] sm:h-[400px]">
+        <div className="w-full h-[320px] sm:h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
-              data={currentVsRequiredChartData}
+              data={chartData}
               margin={{ top: 10, right: 30, left: 70, bottom: 20 }}
               barGap={4}
             >

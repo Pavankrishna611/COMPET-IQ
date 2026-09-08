@@ -19,9 +19,11 @@ import {
 
 export interface LearningJourneyTimelineProps {
   onSelectStage: (stage: LearningStageItem) => void;
+  stages?: LearningStageItem[];
 }
 
-export function LearningJourneyTimeline({ onSelectStage }: LearningJourneyTimelineProps) {
+export function LearningJourneyTimeline({ onSelectStage, stages }: LearningJourneyTimelineProps) {
+  const displayStages = stages && stages.length > 0 ? stages : learningPathStages;
   const getStatusBadge = (status: LearningStageItem['status']) => {
     switch (status) {
       case 'completed':
@@ -84,7 +86,7 @@ export function LearningJourneyTimeline({ onSelectStage }: LearningJourneyTimeli
 
       {/* Responsive Journey Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {learningPathStages.map((stage) => {
+        {displayStages.map((stage) => {
           const action = getStageAction(stage);
           return (
             <Card
