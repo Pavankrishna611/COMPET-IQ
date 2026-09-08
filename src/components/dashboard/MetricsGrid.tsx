@@ -5,7 +5,8 @@ import { StatCard } from '@/components/domain/StatCard';
 import { TrendingUp, AlertTriangle, Clock, GraduationCap } from 'lucide-react';
 import { learnerKeyMetrics } from '@/data/dashboard';
 
-export function MetricsGrid() {
+export function MetricsGrid({ metrics }: { metrics?: typeof learnerKeyMetrics }) {
+  const displayMetrics = metrics || learnerKeyMetrics;
   const getIcon = (name: string) => {
     switch (name) {
       case 'TrendingUp':
@@ -23,7 +24,7 @@ export function MetricsGrid() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {learnerKeyMetrics.map((metric) => (
+      {displayMetrics.map((metric) => (
         <StatCard
           key={metric.id}
           title={metric.title}

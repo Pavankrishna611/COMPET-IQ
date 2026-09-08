@@ -27,12 +27,50 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
+import { useAuth } from '@/context/AuthContext';
+import { watchTimeService } from '@/services';
+
 export default function LearnerProfilePage() {
-  const user = mockUsers.learner;
+  const { user: authUser, currentUser, isDemoMode } = useAuth();
+  const activeUser = currentUser || authUser;
+  const isDemo = isDemoMode || activeUser?.email === 'arjun.kumar@mospi.gov.in';
+  const userId = activeUser?.id || '';
+
+  const user = {
+    name: activeUser?.name || mockUsers.learner.name,
+    email: activeUser?.email || mockUsers.learner.email,
+    employeeId: activeUser?.employeeId || mockUsers.learner.employeeId,
+    designation: activeUser?.designation || mockUsers.learner.designation,
+    department: activeUser?.department || mockUsers.learner.department,
+  };
+
+  const [watchHours, setWatchHours] = useState<number>(isDemo ? 42.5 : 0.0);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [assessmentReminders, setAssessmentReminders] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState(true);
   const [isDossierDownloaded, setIsDossierDownloaded] = useState(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadStats() {
+      try {
+        const stats = await watchTimeService.getUserWatchTime(userId, isDemo);
+        if (isMounted) {
+          setWatchHours(stats.totalWatchHours);
+        }
+      } catch (err) {
+        console.warn('Could not load profile stats:', err);
+      }
+    }
+    loadStats();
+    const unsub = watchTimeService.subscribeToUpdates(() => {
+      loadStats();
+    });
+    return () => {
+      isMounted = false;
+      unsub();
+    };
+  }, [userId, isDemo]);
 
   const handleDownloadDossier = () => {
     setIsDossierDownloaded(true);
@@ -40,6 +78,7 @@ export default function LearnerProfilePage() {
       setIsDossierDownloaded(false);
     }, 4000);
   };
+
 
   return (
     <AppShell
@@ -131,11 +170,15 @@ export default function LearnerProfilePage() {
 
           <StatCard
             title="Learning Hours"
-            value="42.5 hrs"
-            subtitle="Logged on iGOT Karmayogi"
+            value={`${watchHours.toFixed(1)} hrs`}
+            subtitle={watchHours === 0 ? 'No courses completed yet' : 'Logged on iGOT Karmayogi'}
             accent="blue"
             icon={<Clock className="w-5 h-5" />}
-            trend={{ value: '+8.5 hrs this month', direction: 'up' }}
+            trend={
+              watchHours === 0
+                ? { value: 'Ready to learn', direction: 'neutral' }
+                : { value: `+${watchHours.toFixed(1)} hrs this month`, direction: 'up' }
+            }
           />
 
           <StatCard

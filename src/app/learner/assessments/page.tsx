@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { StatCard } from '@/components/domain/StatCard';
@@ -22,23 +22,95 @@ import {
   FilterX, 
   ArrowRight,
   TrendingUp,
-  BrainCircuit
+  BrainCircuit,
+  RefreshCw
 } from 'lucide-react';
+import { assessmentService, quizService } from '@/services';
+import type { AssessmentResponse, UserAttemptHistoryItem } from '@/types/api';
 
 export default function LearnerAssessmentsPage() {
   const [activeTab, setActiveTab] = useState<AssessmentTabKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompetency, setSelectedCompetency] = useState('all');
+  const [assessmentsList, setAssessmentsList] = useState<DetailedAssessmentItem[]>(mockLearnerAssessments);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAssessments = async () => {
+      try {
+        setIsLoading(true);
+        const [assessmentsRes, attemptsRes] = await Promise.allSettled([
+          assessmentService.getAssessments(),
+          quizService.getMyAttempts(),
+        ]);
+
+        if (assessmentsRes.status === 'fulfilled' && assessmentsRes.value && assessmentsRes.value.length > 0) {
+          const apiAssessments = assessmentsRes.value;
+          const attempts = attemptsRes.status === 'fulfilled' ? attemptsRes.value || [] : [];
+
+          const mapped: DetailedAssessmentItem[] = apiAssessments.map((a: AssessmentResponse) => {
+            const relatedAttempt = attempts.find((att: UserAttemptHistoryItem) => att.assessment_id === a.id);
+            let status: 'available' | 'in_progress' | 'completed' = 'available';
+            if (relatedAttempt) {
+              if (relatedAttempt.status === 'COMPLETED') status = 'completed';
+              else if (relatedAttempt.status === 'IN_PROGRESS') status = 'in_progress';
+            }
+
+            const diffMap: Record<string, 'Beginner' | 'Intermediate' | 'Advanced'> = {
+              BEGINNER: 'Beginner',
+              INTERMEDIATE: 'Intermediate',
+              ADVANCED: 'Advanced',
+              Beginner: 'Beginner',
+              Intermediate: 'Intermediate',
+              Advanced: 'Advanced',
+            };
+
+            return {
+              id: a.id,
+              title: a.title,
+              competency: 'Statistical Methodology',
+              competencyId: 'COMP-01',
+              domain: 'Official Statistics',
+              questionsCount: a.question_count || 10,
+              durationMinutes: a.duration_minutes || 20,
+              difficulty: diffMap[a.difficulty] || 'Intermediate',
+              status,
+              score: relatedAttempt?.percentage,
+              lastAttemptDate: relatedAttempt?.completed_at ? new Date(relatedAttempt.completed_at).toLocaleDateString() : undefined,
+              actionRoute: status === 'completed' && relatedAttempt?.attempt_id
+                ? `/learner/quiz/result?attempt_id=${relatedAttempt.attempt_id}`
+                : `/learner/quiz?assessment_id=${a.id}`,
+              description: a.description || 'Standardized assessment evaluating core knowledge and application.',
+              category: 'Diagnostic',
+            };
+          });
+
+          // Merge with mock to preserve variety while giving preference to backend items
+          const apiTitles = new Set(mapped.map((m) => m.title.toLowerCase()));
+          const remainingMock = mockLearnerAssessments.filter(
+            (m) => !apiTitles.has(m.title.toLowerCase())
+          );
+          setAssessmentsList([...mapped, ...remainingMock]);
+        }
+      } catch (err) {
+        console.warn('Using fallback assessments:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAssessments();
+  }, []);
 
   // Competency options
   const competencies = useMemo(() => {
-    const list = Array.from(new Set(mockLearnerAssessments.map((a) => a.competency)));
+    const list = Array.from(new Set(assessmentsList.map((a) => a.competency)));
     return ['all', ...list];
-  }, []);
+  }, [assessmentsList]);
 
   // Filtered assessments
   const filteredAssessments = useMemo(() => {
-    return mockLearnerAssessments.filter((item) => {
+    return assessmentsList.filter((item) => {
       // Tab filter
       if (activeTab !== 'all' && item.status !== activeTab) {
         return false;
@@ -60,17 +132,17 @@ export default function LearnerAssessmentsPage() {
 
       return true;
     });
-  }, [activeTab, searchQuery, selectedCompetency]);
+  }, [activeTab, searchQuery, selectedCompetency, assessmentsList]);
 
   // Counts for tabs
   const counts = useMemo(() => {
     return {
-      all: mockLearnerAssessments.length,
-      available: mockLearnerAssessments.filter((a) => a.status === 'available').length,
-      in_progress: mockLearnerAssessments.filter((a) => a.status === 'in_progress').length,
-      completed: mockLearnerAssessments.filter((a) => a.status === 'completed').length,
+      all: assessmentsList.length,
+      available: assessmentsList.filter((a) => a.status === 'available').length,
+      in_progress: assessmentsList.filter((a) => a.status === 'in_progress').length,
+      completed: assessmentsList.filter((a) => a.status === 'completed').length,
     };
-  }, []);
+  }, [assessmentsList]);
 
   return (
     <AppShell
@@ -115,24 +187,24 @@ export default function LearnerAssessmentsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Available"
-            value={learnerAssessmentSummary.availableCount}
+            value={counts.available}
             accent="teal"
             icon={<CheckSquare className="w-5 h-5" />}
             subtitle="Ready for diagnostic check"
           />
           <StatCard
             title="In Progress"
-            value={learnerAssessmentSummary.inProgressCount}
+            value={counts.in_progress}
             accent="warning"
             icon={<Clock className="w-5 h-5" />}
-            subtitle="Python Fundamentals"
+            subtitle="Active assessment sessions"
           />
           <StatCard
             title="Completed"
-            value={learnerAssessmentSummary.completedCount}
+            value={counts.completed}
             accent="blue"
             icon={<Award className="w-5 h-5" />}
-            subtitle="Verified across 4 domains"
+            subtitle="Verified across official domains"
           />
           <StatCard
             title="Average Score"
@@ -151,17 +223,17 @@ export default function LearnerAssessmentsPage() {
             </div>
             <div>
               <h4 className="text-sm font-bold text-text-primary">
-                Unfinished Diagnostic: Python Fundamentals
+                Diagnostic Assessment Ready: Python &amp; Official Statistics
               </h4>
               <p className="text-xs text-text-secondary">
-                You have 1 assessment in progress. Completing this unlocks Stage 3 in your personalized pathway.
+                Completing assessments updates your competency ratings and unlocks advanced roadmap stages.
               </p>
             </div>
           </div>
 
           <Link href="/learner/quiz">
             <Button variant="primary" size="sm" className="text-xs font-semibold whitespace-nowrap shadow-sm">
-              Resume Python Assessment
+              Launch Diagnostic Assessment
             </Button>
           </Link>
         </div>

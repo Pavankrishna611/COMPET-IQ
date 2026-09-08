@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   mockDetailedCourses, 
@@ -14,6 +14,10 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AppShell } from '@/components/layout/AppShell';
+import { courseService, watchTimeService } from '@/services';
+import { useAuth } from '@/context/AuthContext';
+import type { CourseResponse } from '@/types/api';
+
 import { 
   ChevronRight, 
   Clock, 
@@ -27,7 +31,8 @@ import {
   FileText, 
   Sparkles,
   ExternalLink,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 
 interface PageProps {
@@ -38,13 +43,157 @@ interface PageProps {
 
 export default function CourseDetailPage({ params }: PageProps) {
   const { id } = params;
-  const course =
+
+  const initialMatch =
     mockDetailedCourses.find((c) => c.id === id) ||
     mockDetailedCourses.find((c) => c.id.toLowerCase() === id.toLowerCase()) ||
-    (id.startsWith('crs') ? mockDetailedCourses[0] : undefined);
+    null;
 
+  const { user: authUser, currentUser } = useAuth();
+  const activeUser = currentUser || authUser;
+  const userId = activeUser?.id || '';
+
+  const [course, setCourse] = useState<DetailedCourse | null>(initialMatch);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialMatch);
   const [isSaved, setIsSaved] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCourse = async () => {
+      try {
+        if (!initialMatch) {
+          setIsLoading(true);
+        }
+        const res = await courseService.getCourseDetails(id);
+        if (res && isMounted) {
+          const providerVal: DetailedCourse['provider'] = res.provider?.includes('iGOT')
+            ? 'iGOT Karmayogi'
+            : res.provider?.includes('NSSTA')
+            ? 'NSSTA / TPAC'
+            : 'COMPETIQ Learning';
+
+          const domainVal: DetailedCourse['domain'] = res.domain?.includes('Tech')
+            ? 'Technical'
+            : res.domain?.includes('Gov')
+            ? 'Digital Governance'
+            : res.domain?.includes('Beh')
+            ? 'Behavioural'
+            : 'Statistical Methods';
+
+          const diffMap: Record<string, 'Beginner' | 'Intermediate' | 'Advanced'> = {
+            BEGINNER: 'Beginner',
+            INTERMEDIATE: 'Intermediate',
+            ADVANCED: 'Advanced',
+            Beginner: 'Beginner',
+            Intermediate: 'Intermediate',
+            Advanced: 'Advanced',
+          };
+
+          const dynamicCourse: DetailedCourse = {
+            id: res.id,
+            title: res.title,
+            provider: providerVal,
+            domain: domainVal,
+            difficulty: diffMap[res.difficulty] || 'Intermediate',
+            duration: `${res.duration_hours || 12} Hours`,
+            durationHours: res.duration_hours || 12,
+            rating: 4.8,
+            enrolledCount: 142,
+            isRecommended: true,
+            recommendationScore: 94,
+            whyRecommended: 'Aligned with MoSPI official capacity building guidelines.',
+            skills: res.competencies && res.competencies.length > 0
+              ? res.competencies.map((comp: any) => comp.competency_name)
+              : ['Statistical Analysis', 'MoSPI Protocols'],
+            description: res.description || 'Comprehensive training module aligned with cadre competency standards.',
+            learningObjectives: [
+              'Understand core theoretical principles and administrative workflows',
+              'Apply practical tools to official survey pipelines',
+              'Comply with National Statistical System standards',
+            ],
+            prerequisites: res.prerequisites?.map((p: any) => p.prerequisite_title) || ['Basic Office Computing'],
+            modules: [
+              {
+                id: `m-${res.id}-1`,
+                moduleNumber: 1,
+                title: 'Foundations & Concepts',
+                duration: '4 Hours',
+                description: 'Core theoretical concepts and administrative workflows.',
+              },
+              {
+                id: `m-${res.id}-2`,
+                moduleNumber: 2,
+                title: 'Practical Application & Tools',
+                duration: '4 Hours',
+                description: 'Hands-on practical sessions with official tools and methodologies.',
+              },
+              {
+                id: `m-${res.id}-3`,
+                moduleNumber: 3,
+                title: 'Case Studies & Evaluation',
+                duration: `${Math.max(2, (res.duration_hours || 12) - 8)} Hours`,
+                description: 'Real-world case studies, MoSPI guidelines, and comprehensive assessment.',
+              },
+            ],
+            expectedImprovement: {
+              competency: res.competencies?.[0]?.competency_name || 'Statistical Domain',
+              from: 'Level 2.0',
+              to: 'Level 4.0',
+            },
+            relatedCourseIds: [],
+          };
+
+          setCourse(dynamicCourse);
+        }
+      } catch (err) {
+        console.warn('Could not fetch backend course, keeping fallback if available:', err);
+        if (!initialMatch && isMounted) {
+          const fallback =
+            mockDetailedCourses.find((c) => c.id === id) ||
+            mockDetailedCourses.find((c) => c.id.toLowerCase() === id.toLowerCase()) ||
+            (id.startsWith('crs') ? mockDetailedCourses[0] : null);
+          setCourse(fallback);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchCourse();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, initialMatch]);
+
+  if (isLoading) {
+    return (
+      <AppShell
+        title="Loading Course..."
+        breadcrumbs={[
+          { label: 'COMPETIQ', href: '/' },
+          { label: 'Learner' },
+          { label: 'Courses', href: '/learner/courses' },
+          { label: 'Loading...' },
+        ]}
+        defaultRole="learner"
+      >
+        <div className="p-12 max-w-3xl mx-auto text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto animate-spin">
+            <Loader2 className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Loading course details from MoSPI/iGOT catalog...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!course) {
     return (
@@ -82,7 +231,12 @@ export default function CourseDetailPage({ params }: PageProps) {
   }
 
   const handleStartLearning = () => {
-    setToastMessage(`Course launched! Connecting to ${course.provider} learning environment...`);
+    if (userId) {
+      watchTimeService.recordWatchHours(userId, 1.5);
+      setToastMessage(`Course launched! Logged +1.5h watch time into your learning profile.`);
+    } else {
+      setToastMessage(`Course launched! Connecting to ${course.provider} learning environment...`);
+    }
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);

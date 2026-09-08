@@ -18,7 +18,8 @@ import {
   Route,
 } from 'lucide-react';
 
-export function LearningPathJourney() {
+export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }) {
+  const displaySteps = steps && steps.length > 0 ? steps : learnerLearningPathSteps;
   const getStatusBadge = (status: LearningJourneyStep['status']) => {
     switch (status) {
       case 'completed':
@@ -108,12 +109,32 @@ export function LearningPathJourney() {
 
       {/* Steps Journey Container */}
       <div className="pt-6">
-        {/* Desktop Horizontal View (lg+) */}
-        <div className="hidden lg:grid grid-cols-5 gap-3 relative">
+        {steps !== undefined && steps.length === 0 ? (
+          <div className="py-8 text-center flex flex-col items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-teal-light text-teal flex items-center justify-center">
+              <Route className="w-6 h-6" />
+            </div>
+            <div className="max-w-md">
+              <h3 className="text-sm font-bold text-text-primary">No Active Learning Path Yet</h3>
+              <p className="text-xs text-text-secondary mt-1">
+                Generate a personalized learning journey based on your cadre and current skill requirements.
+              </p>
+            </div>
+            <Link href="/learner/learning-path">
+              <Button variant="primary" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                Generate Learning Path
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Horizontal View (lg+) */}
+            <div className="hidden lg:grid grid-cols-5 gap-3 relative">
+
           {/* Connector Line behind steps */}
           <div className="absolute top-5 left-8 right-8 h-0.5 bg-border -z-0" />
 
-          {learnerLearningPathSteps.map((step, idx) => (
+          {displaySteps.map((step, idx) => (
             <div key={step.stepNumber} className="relative z-10 flex flex-col items-center text-center">
               {/* Step indicator node */}
               <div
@@ -171,7 +192,7 @@ export function LearningPathJourney() {
 
         {/* Mobile & Tablet Vertical View (< lg) */}
         <div className="lg:hidden relative pl-6 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-          {learnerLearningPathSteps.map((step) => (
+          {displaySteps.map((step) => (
             <div key={step.stepNumber} className="relative">
               {/* Timeline Node */}
               <div
@@ -225,9 +246,12 @@ export function LearningPathJourney() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </Card>
-  );
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  </Card>
+);
+
 }

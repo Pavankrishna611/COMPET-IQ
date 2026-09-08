@@ -19,8 +19,49 @@ export class AssistantService {
    * return await response.json();
    */
   async sendMessage(query: string, options?: AssistantQueryOptions): Promise<AIResponse> {
-    // Simulate natural retrieval and processing delay (600ms)
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      const { assistantApiService } = await import('@/services/assistant.service');
+      const ragRes = await assistantApiService.chat(query);
+      if (ragRes && ragRes.answer) {
+        const sources: SourceReference[] = (ragRes.sources || []).map((s: any, idx: number) => ({
+          id: s.material_id || `src-${idx}`,
+          documentTitle: s.material_title || s.title || 'MoSPI Statistical Repository',
+          module: `Module Part ${(s.chunk_index ?? idx) + 1}`,
+          chunkReference: s.snippet || 'Grounded pedagogical extract',
+          relevanceScore: Math.round(((s.relevance_score ?? s.score ?? 0.85) > 1 ? (s.relevance_score ?? s.score) : (s.relevance_score ?? s.score ?? 0.85) * 100)),
+          sourceType: 'Approved Learning Material',
+        }));
+
+        return {
+          answer: ragRes.answer,
+          keyPoints: [
+            'Response directly retrieved from indexed official learning corpus.',
+            'Synthesized in accordance with MoSPI domain standards.',
+          ],
+          relatedCompetency: {
+            name: 'Statistical Methods',
+            currentLevel: 3.5,
+            requiredLevel: 4.5,
+            gap: 1.0,
+            status: 'Moderate Gap',
+            link: '/learner/skill-gaps',
+          },
+          sources: sources.length > 0 ? sources : undefined,
+          followUpQuestions: ragRes.suggested_followups && ragRes.suggested_followups.length > 0
+            ? ragRes.suggested_followups
+            : [
+                'Give me a real-world example in official statistics',
+                'How does this link with our survey field guidelines?',
+                'Create a practice question on this topic',
+              ],
+        };
+      }
+    } catch (apiErr) {
+      // If backend RAG is offline or fails, seamlessly proceed to local knowledge base
+    }
+
+    // Simulate natural retrieval and processing delay (400ms)
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     const normalized = query.toLowerCase().trim();
 

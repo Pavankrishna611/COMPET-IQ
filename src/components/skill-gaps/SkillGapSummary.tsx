@@ -5,7 +5,8 @@ import { StatCard } from '@/components/domain/StatCard';
 import { skillGapSummaryStats } from '@/data/skillGaps';
 import { AlertTriangle, AlertCircle, TrendingUp, CheckCircle2 } from 'lucide-react';
 
-export function SkillGapSummary() {
+export function SkillGapSummary({ stats }: { stats?: typeof skillGapSummaryStats }) {
+  const displayStats = stats && stats.length > 0 ? stats : skillGapSummaryStats;
   const getIcon = (accent: string) => {
     switch (accent) {
       case 'critical':
@@ -22,7 +23,7 @@ export function SkillGapSummary() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {skillGapSummaryStats.map((stat) => (
+      {displayStats.map((stat) => (
         <StatCard
           key={stat.id}
           title={stat.title}

@@ -32,3 +32,16 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# python & backend
+backend/venv/
+backend/.venv/
+**/__pycache__/
+*.py[cod]
+*.log
+uploads/
+*.db
+*.sqlite3
+backend/vector_store/
+vector_store/
+

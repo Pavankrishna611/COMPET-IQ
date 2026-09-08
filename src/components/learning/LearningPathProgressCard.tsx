@@ -7,10 +7,25 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { learningPathProgressStats } from '@/data/learningPaths';
 import { CheckCircle2, PlayCircle, Clock, BookOpen, Layers } from 'lucide-react';
 
-export function LearningPathProgressCard() {
-  const percent = Math.round(
+export interface LearningPathProgressCardProps {
+  stats?: {
+    totalCourses: number;
+    completedCourses: number;
+    inProgressCourses: number;
+    progressPercentage: number;
+    currentStage?: number;
+    totalStages?: number;
+  };
+}
+
+export function LearningPathProgressCard({ stats }: LearningPathProgressCardProps = {}) {
+  const completed = stats ? stats.completedCourses : learningPathProgressStats.completedCourses;
+  const total = stats ? stats.totalCourses : learningPathProgressStats.totalCourses;
+  const inProgress = stats ? stats.inProgressCourses : learningPathProgressStats.inProgressCourses;
+  const percent = stats ? Math.round(stats.progressPercentage) : Math.round(
     (learningPathProgressStats.completedCourses / learningPathProgressStats.totalCourses) * 100
   );
+  const stageDisplay = stats?.currentStage ? `Stage ${stats.currentStage} of ${stats.totalStages || 6}` : 'Stage 2 of 6';
 
   return (
     <Card className="p-5 border-border shadow-card bg-surface flex flex-col justify-between h-full">
@@ -31,7 +46,7 @@ export function LearningPathProgressCard() {
           </div>
 
           <Badge variant="teal" size="sm" withDot>
-            Stage 2 of 6
+            {stageDisplay}
           </Badge>
         </div>
 
@@ -44,7 +59,7 @@ export function LearningPathProgressCard() {
             <div className="flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-success" />
               <span className="text-base font-bold text-text-primary font-mono">
-                {learningPathProgressStats.completedCourses} / {learningPathProgressStats.totalCourses}
+                {completed} / {total}
               </span>
             </div>
           </div>
@@ -56,7 +71,7 @@ export function LearningPathProgressCard() {
             <div className="flex items-center justify-center gap-1.5">
               <PlayCircle className="w-4 h-4 text-primary" />
               <span className="text-base font-bold text-primary font-mono">
-                {learningPathProgressStats.inProgressCourses} Course
+                {inProgress} {inProgress === 1 ? 'Course' : 'Courses'}
               </span>
             </div>
           </div>

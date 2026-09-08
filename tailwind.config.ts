@@ -28,6 +28,7 @@ const config: Config = {
         },
         // Locked AI Accent (sparingly)
         ai: {
+          
           purple: '#6B5DD3',
           light: '#F0EEFC',
         },
