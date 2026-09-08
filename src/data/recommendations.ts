@@ -1,0 +1,41 @@
+import { Recommendation } from '@/types';
+
+export const mockRecommendations: Recommendation[] = [
+  {
+    id: 'rec_01',
+    type: 'course',
+    title: 'SNA 2008: Advanced Gross Value Added (GVA) Computation',
+    provider: 'NSSTA',
+    rationale: 'Identified a high-priority 2-level gap in National Accounts compilation required for your upcoming cadre elevation.',
+    score: 96,
+    competencyId: 'comp_02',
+    competencyName: 'National Accounts & GDP Estimation (SNA 2008)',
+    tags: ['Critical Gap', 'High Match', 'MoSPI Recommended'],
+    isAiGenerated: true,
+    actionUrl: '/learner/courses/crs_101',
+  },
+  {
+    id: 'rec_02',
+    type: 'path',
+    title: 'Economic Statistics & National Accounts Specialist Pathway',
+    rationale: 'Structured pathway covering 3 intersecting gaps in SNA 2008, R computing, and microdata synthesis.',
+    score: 92,
+    competencyId: 'comp_02',
+    competencyName: 'National Accounts & GDP Estimation (SNA 2008)',
+    tags: ['Pathway', 'Career Milestone'],
+    isAiGenerated: true,
+    actionUrl: '/learner/learning-path',
+  },
+  {
+    id: 'rec_03',
+    type: 'assessment',
+    title: 'Small Area Estimation: Fay-Herriot Diagnostic Exam',
+    rationale: 'Validating baseline modeling competency prior to taking district-level disaggregation workshops.',
+    score: 85,
+    competencyId: 'comp_05',
+    competencyName: 'Small Area Estimation (SAE) for Policy',
+    tags: ['Diagnostic', 'Skill Benchmark'],
+    isAiGenerated: false,
+    actionUrl: '/learner/assessments',
+  },
+];
