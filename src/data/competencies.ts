@@ -767,10 +767,10 @@ export const mockCompetencies: Competency[] = mockDetailedCompetencies.map((c) =
     c.domain === 'Statistical'
       ? 'Core Statistical'
       : c.domain === 'Technical'
-      ? 'Data Science & AI'
-      : c.domain === 'Digital Governance'
-      ? 'Governance & Policy'
-      : 'Core Statistical',
+        ? 'Data Science & AI'
+        : c.domain === 'Digital Governance'
+          ? 'Governance & Policy'
+          : 'Core Statistical',
   description: c.description,
   currentLevel: Math.round(c.currentLevel),
   requiredLevel: Math.round(c.requiredLevel),

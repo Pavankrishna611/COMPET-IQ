@@ -249,11 +249,10 @@ export function ChatMessageItem({
                 type="button"
                 onClick={() => handleFeedback('helpful')}
                 title="Mark as helpful"
-                className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 text-[11px] ${
-                  feedback === 'helpful'
-                    ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 font-semibold'
-                    : 'hover:bg-surface-elevated hover:text-text-primary'
-                }`}
+                className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 text-[11px] ${feedback === 'helpful'
+                  ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 font-semibold'
+                  : 'hover:bg-surface-elevated hover:text-text-primary'
+                  }`}
               >
                 <ThumbsUp className="w-3.5 h-3.5" />
                 <span>Helpful</span>
@@ -264,11 +263,10 @@ export function ChatMessageItem({
                 type="button"
                 onClick={() => handleFeedback('unhelpful')}
                 title="Mark as unhelpful"
-                className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 text-[11px] ${
-                  feedback === 'unhelpful'
-                    ? 'text-rose-700 bg-rose-50 dark:bg-rose-950/40 font-semibold'
-                    : 'hover:bg-surface-elevated hover:text-text-primary'
-                }`}
+                className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 text-[11px] ${feedback === 'unhelpful'
+                  ? 'text-rose-700 bg-rose-50 dark:bg-rose-950/40 font-semibold'
+                  : 'hover:bg-surface-elevated hover:text-text-primary'
+                  }`}
               >
                 <ThumbsDown className="w-3.5 h-3.5" />
               </button>

@@ -76,6 +76,22 @@ class UserProfile(BaseModel):
         String(150),
         nullable=True,
     )
+    job_role: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    current_assignment: Mapped[Optional[str]] = mapped_column(
+        String(200),
+        nullable=True,
+    )
+    previous_trainings: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    professional_goal: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
     location: Mapped[Optional[str]] = mapped_column(
         String(100),
         nullable=True,
@@ -84,6 +100,7 @@ class UserProfile(BaseModel):
         Text,
         nullable=True,
     )
+
 
     # Onboarding Status Tracking (Steps 1..5)
     # 1 = Basic Profile Created, 2 = Professional Details Added,
@@ -123,3 +140,19 @@ class UserProfile(BaseModel):
         "Department",
         back_populates="user_profiles",
     )
+
+    @property
+    def career_goal(self) -> Optional[str]:
+        return self.professional_goal
+
+    @property
+    def education(self) -> Optional[str]:
+        return self.education_level
+
+    @property
+    def experience(self) -> Optional[float]:
+        return self.experience_years
+
+    @property
+    def full_name(self) -> Optional[str]:
+        return self.user.full_name if self.user else None

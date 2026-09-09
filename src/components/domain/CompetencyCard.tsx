@@ -59,8 +59,8 @@ export function CompetencyCard({ competency, onSelect, className }: CompetencyCa
                       isFilled
                         ? 'bg-teal'
                         : lvl <= competency.requiredLevel
-                        ? 'bg-[#CBD5E1]'
-                        : 'bg-[#E2E8F0]'
+                          ? 'bg-[#CBD5E1]'
+                          : 'bg-[#E2E8F0]'
                     )}
                   />
                   {isTarget && (

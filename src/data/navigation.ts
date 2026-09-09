@@ -39,6 +39,16 @@ export const navigationItems: NavigationItem[] = [
     section: 'main',
   },
   {
+    id: 'learner_recommendations',
+    label: 'Recommendations',
+    href: '/learner/recommendations',
+    iconName: 'Sparkles',
+    badge: 'AI',
+    badgeVariant: 'ai',
+    roles: ['learner'],
+    section: 'main',
+  },
+  {
     id: 'learner_courses',
     label: 'Courses',
     href: '/learner/courses',
@@ -47,10 +57,29 @@ export const navigationItems: NavigationItem[] = [
     section: 'main',
   },
   {
+    id: 'learner_interested_courses',
+    label: 'Interested Courses',
+    href: '/learner/interested-courses',
+    iconName: 'BookmarkCheck',
+    roles: ['learner'],
+    section: 'main',
+  },
+
+  {
     id: 'learner_assessments',
     label: 'Assessments',
     href: '/learner/assessments',
     iconName: 'ClipboardCheck',
+    roles: ['learner'],
+    section: 'main',
+  },
+  {
+    id: 'learner_quiz_generator',
+    label: 'AI Quiz Generator',
+    href: '/learner/quiz-generator',
+    iconName: 'BrainCircuit',
+    badge: 'AI',
+    badgeVariant: 'ai',
     roles: ['learner'],
     section: 'main',
   },
@@ -64,6 +93,7 @@ export const navigationItems: NavigationItem[] = [
     roles: ['learner'],
     section: 'main',
   },
+
   {
     id: 'learner_profile',
     label: 'Profile',
@@ -118,6 +148,14 @@ export const navigationItems: NavigationItem[] = [
   },
 
   // Trainer Navigation
+  {
+    id: 'trainer_dashboard',
+    label: 'Dashboard',
+    href: '/trainer/dashboard',
+    iconName: 'LayoutDashboard',
+    roles: ['trainer'],
+    section: 'main',
+  },
   {
     id: 'trainer_generator',
     label: 'Assessment Generator',

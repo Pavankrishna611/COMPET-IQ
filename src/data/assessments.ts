@@ -15,6 +15,9 @@ export interface DetailedAssessmentItem {
   actionRoute: string;
   description: string;
   category: string;
+  dueDate?: string;
+  author?: string;
+  isOfficial?: boolean;
 }
 
 export interface TrainerAssessmentItem {
@@ -24,7 +27,7 @@ export interface TrainerAssessmentItem {
   questionsCount: number;
   learnersCount: number;
   averageScore: number;
-  status: 'Published' | 'Draft' | 'Archived';
+  status: 'Published' | 'Draft' | 'Archived' | 'Assigned';
   lastUpdated: string;
   author: string;
 }

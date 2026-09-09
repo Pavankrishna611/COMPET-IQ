@@ -542,7 +542,7 @@ export default function PartZeroShowcasePage() {
                       title="No Assessments Pending"
                       description="You have completed all scheduled competency diagnostics for the current statistical quarter."
                       actionLabel="Explore Available Quizzes"
-                      onAction={() => {}}
+                      onAction={() => { }}
                     />
                   </div>
 
@@ -553,7 +553,7 @@ export default function PartZeroShowcasePage() {
                     <ErrorState
                       title="Unable to Calculate Skill Gap Vector"
                       message="Temporary timeout while compiling benchmark differential for National Accounts."
-                      onRetry={() => {}}
+                      onRetry={() => { }}
                     />
                   </div>
                 </div>

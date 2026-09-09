@@ -16,10 +16,27 @@ class UserRegister(BaseModel):
     confirm_password: Optional[str] = Field(None, description="Password confirmation matching password")
     phone_number: Optional[str] = Field(None, max_length=20, description="Optional contact phone number")
     official_id: Optional[str] = Field(None, min_length=1, max_length=50, description="Government or employee identification ID")
+    role: Optional[str] = Field("LEARNER", description="Requested role: LEARNER or TRAINER")
     designation: Optional[str] = Field(None, max_length=100, description="Job title / designation")
+    department: Optional[str] = Field(None, max_length=150, description="Department or division name")
+    organization: Optional[str] = Field(None, max_length=150, description="Organization / Institution name")
+    job_role: Optional[str] = Field(None, max_length=100, description="Cadre / Job role")
     experience_years: float = Field(0.0, ge=0.0, description="Years of professional experience")
     role_id: Optional[uuid.UUID] = Field(None, description="Assigned Role UUID")
     department_id: Optional[uuid.UUID] = Field(None, description="Assigned Department UUID")
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: Optional[str]) -> str:
+        """Ensure role is strictly LEARNER or TRAINER, blocking ADMIN attempts."""
+        if v is None:
+            return "LEARNER"
+        normalized = v.strip().upper()
+        if normalized not in ["LEARNER", "TRAINER"]:
+            if normalized == "ADMIN":
+                raise ValueError("Public registration cannot assign administrative roles.")
+            raise ValueError("Invalid role specified. Supported roles are LEARNER and TRAINER.")
+        return normalized
 
     @field_validator("password")
     @classmethod

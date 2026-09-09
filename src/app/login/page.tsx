@@ -29,16 +29,17 @@ export default function LoginPage() {
     setErrorMessage(null);
     setIsLoading(true);
     try {
-      await loginWithCredentials(
-        officialId || 'arjun.kumar@mospi.gov.in',
-        password || 'demo123'
-      );
+      const emailOrId = officialId.trim() || 'arjun.kumar@mospi.gov.in';
+      const pwd = password || 'demo123';
+      await loginWithCredentials(emailOrId, pwd);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Login failed. Please check your credentials.');
+      const msg = err.detail?.error?.message || err.message || 'Login failed. Please check your credentials.';
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleRoleSelect = async (role: Role) => {
     setErrorMessage(null);

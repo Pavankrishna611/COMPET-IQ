@@ -120,8 +120,8 @@ export function MobileSidebar({ isOpen, onClose, role: propRole }: MobileSidebar
               {currentRole === 'admin'
                 ? 'Administration & Workforce'
                 : currentRole === 'trainer'
-                ? 'Trainer Management'
-                : 'Competency & Learning'}
+                  ? 'Trainer Management'
+                  : 'Competency & Learning'}
             </span>
 
             {mainItems.map((item) => {
@@ -129,7 +129,7 @@ export function MobileSidebar({ isOpen, onClose, role: propRole }: MobileSidebar
               const isActive =
                 pathname === item.href ||
                 (pathname.startsWith(item.href) && item.href !== '/') ||
-                (item.href === '/learner/assessments' && pathname.startsWith('/learner/quiz'));
+                (item.href === '/learner/assessments' && (pathname === '/learner/quiz' || pathname.startsWith('/learner/quiz/')));
 
               return (
                 <Link
@@ -152,8 +152,8 @@ export function MobileSidebar({ isOpen, onClose, role: propRole }: MobileSidebar
                         item.badgeVariant === 'warning'
                           ? 'bg-warning text-white'
                           : item.badgeVariant === 'ai'
-                          ? 'bg-ai-purple text-white'
-                          : 'bg-teal text-white'
+                            ? 'bg-ai-purple text-white'
+                            : 'bg-teal text-white'
                       )}
                     >
                       {item.badge}

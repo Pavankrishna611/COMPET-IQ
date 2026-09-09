@@ -28,13 +28,16 @@ const config: Config = {
         },
         // Locked AI Accent (sparingly)
         ai: {
-          
+
           purple: '#6B5DD3',
           light: '#F0EEFC',
         },
         // Surfaces & Backgrounds
         background: '#F5F8FC',
-        surface: '#FFFFFF',
+        surface: {
+          DEFAULT: '#FFFFFF',
+          elevated: '#F8FAFC',
+        },
         border: {
           DEFAULT: '#D9E2EC',
           light: '#EDF2F7',

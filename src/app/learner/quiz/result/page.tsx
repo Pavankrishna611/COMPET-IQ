@@ -77,29 +77,29 @@ function QuizResultContent() {
 
   const competencyImpact = resultData?.competency_breakdown?.[0]
     ? {
-        competency: resultData.competency_breakdown[0].competency_name,
-        before: resultData.competency_breakdown[0].updated_level
-          ? Math.max(1.0, resultData.competency_breakdown[0].updated_level - resultData.competency_breakdown[0].competency_level_delta)
-          : 3.0,
-        after: resultData.competency_breakdown[0].updated_level || 3.5,
-        improvement: resultData.competency_breakdown[0].competency_level_delta || 0.5,
-        explanation: 'Updated MoSPI competency evaluation based on verified diagnostic assessment responses.',
-      }
+      competency: resultData.competency_breakdown[0].competency_name,
+      before: resultData.competency_breakdown[0].updated_level
+        ? Math.max(1.0, resultData.competency_breakdown[0].updated_level - resultData.competency_breakdown[0].competency_level_delta)
+        : 3.0,
+      after: resultData.competency_breakdown[0].updated_level || 3.5,
+      improvement: resultData.competency_breakdown[0].competency_level_delta || 0.5,
+      explanation: 'Updated MoSPI competency evaluation based on verified diagnostic assessment responses.',
+    }
     : mockQuizResult.competencyImpact;
 
   const reviews = resultData?.question_reviews && resultData.question_reviews.length > 0
     ? resultData.question_reviews.map((b, idx) => ({
-        id: b.question_id,
-        questionNumber: idx + 1,
-        question: b.question_text,
-        yourAnswer: b.selected_option ? `Option ${b.selected_option}` : 'None',
-        yourOptionKey: (b.selected_option || 'A') as 'A' | 'B' | 'C' | 'D',
-        correctAnswer: `Option ${b.correct_option}`,
-        correctOptionKey: (b.correct_option || 'A') as 'A' | 'B' | 'C' | 'D',
-        isCorrect: b.is_correct,
-        explanation: b.explanation || 'Verified response aligned with official statistical curriculum standards.',
-        competency: b.competency_name || 'Official Statistics',
-      }))
+      id: b.question_id,
+      questionNumber: idx + 1,
+      question: b.question_text,
+      yourAnswer: b.selected_option ? `Option ${b.selected_option}` : 'None',
+      yourOptionKey: (b.selected_option || 'A') as 'A' | 'B' | 'C' | 'D',
+      correctAnswer: `Option ${b.correct_option}`,
+      correctOptionKey: (b.correct_option || 'A') as 'A' | 'B' | 'C' | 'D',
+      isCorrect: b.is_correct,
+      explanation: b.explanation || 'Verified response aligned with official statistical curriculum standards.',
+      competency: b.competency_name || 'Official Statistics',
+    }))
     : mockQuizResult.reviews;
 
   if (isLoading) {

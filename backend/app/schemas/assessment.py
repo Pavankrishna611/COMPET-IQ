@@ -42,6 +42,10 @@ class AssessmentResponse(AssessmentBase):
     question_count: int = 0
     created_at: datetime
     updated_at: datetime
+    published_at: Optional[datetime] = None
+    due_date: Optional[datetime] = None
+    assigned_to_me: Optional[bool] = None
+    assigned_learners_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -144,3 +148,53 @@ class AssessmentAnalyticsResponse(BaseModel):
     highest_score: float
     lowest_score: float
     competency_performance: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class AssessmentAssignRequest(BaseModel):
+    """Payload for assigning an official published assessment to one or more learners."""
+
+    learner_ids: List[uuid.UUID] = Field(..., min_length=1, description="List of learner UUIDs to assign")
+    due_date: Optional[datetime] = Field(None, description="Optional deadline for completing assessment")
+
+
+class AssessmentAssignmentResponse(BaseModel):
+    """Schema representing an individual assessment assignment."""
+
+    id: uuid.UUID
+    assessment_id: uuid.UUID
+    user_id: uuid.UUID
+    learner_name: str
+    learner_email: str
+    learner_official_id: str
+    department_name: Optional[str] = None
+    designation: Optional[str] = None
+    assigned_at: datetime
+    due_date: Optional[datetime] = None
+    status: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AssessmentAssignResult(BaseModel):
+    """Result of batch assigning an assessment to learners."""
+
+    assessment_id: uuid.UUID
+    assigned_count: int
+    skipped_duplicates_count: int
+    assignments: List[AssessmentAssignmentResponse] = Field(default_factory=list)
+    message: str
+
+
+class AssignableLearnerResponse(BaseModel):
+    """Learner entity available for assignment selection by trainers."""
+
+    id: uuid.UUID
+    official_id: str
+    full_name: str
+    email: str
+    designation: Optional[str] = None
+    department_name: Optional[str] = None
+    current_assignment: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+

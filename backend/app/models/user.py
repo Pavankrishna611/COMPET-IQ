@@ -10,6 +10,7 @@ from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.assessment import Assessment
+    from app.models.assessment_assignment import AssessmentAssignment
     from app.models.assessment_attempt import AssessmentAttempt
     from app.models.chat_conversation import ChatConversation
     from app.models.department import Department
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from app.models.learning_path import LearningPath
     from app.models.role import Role
     from app.models.user_competency import UserCompetency
+    from app.models.user_interested_course import UserInterestedCourse
     from app.models.user_profile import UserProfile
     from app.models.user_skill_declaration import UserSkillDeclaration
 
@@ -108,6 +110,12 @@ class User(BaseModel):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    assigned_assessments: Mapped[List["AssessmentAssignment"]] = relationship(
+        "AssessmentAssignment",
+        foreign_keys="[AssessmentAssignment.user_id]",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     learning_materials: Mapped[List["LearningMaterial"]] = relationship(
         "LearningMaterial",
         back_populates="uploader",
@@ -133,3 +141,9 @@ class User(BaseModel):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    interested_courses: Mapped[List["UserInterestedCourse"]] = relationship(
+        "UserInterestedCourse",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+

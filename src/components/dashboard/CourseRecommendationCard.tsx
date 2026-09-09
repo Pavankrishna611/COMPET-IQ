@@ -107,11 +107,12 @@ export function RecommendationsSection({ recommendations }: { recommendations?: 
           </div>
         </div>
 
-        <Link href="/learner/courses">
+        <Link href="/learner/recommendations">
           <Button variant="ghost" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
             Explore All Recommendations
           </Button>
         </Link>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Float, ForeignKey, UniqueConstraint, Uuid
+from sqlalchemy import DateTime, Float, ForeignKey, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class UserCompetency(BaseModel):
-    """User competency model representing assessed proficiency levels and confidence scores."""
+    """User competency model representing assessed proficiency levels, targets, and gaps."""
 
     __tablename__ = "user_competencies"
     __table_args__ = (
@@ -45,6 +45,30 @@ class UserCompetency(BaseModel):
         nullable=False,
     )
     last_assessed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    required_level: Mapped[Optional[float]] = mapped_column(
+        Float,
+        default=0.0,
+        nullable=True,
+    )
+    gap: Mapped[Optional[float]] = mapped_column(
+        Float,
+        default=0.0,
+        nullable=True,
+    )
+    priority: Mapped[Optional[str]] = mapped_column(
+        String(20),
+        default="MEDIUM",
+        nullable=True,
+    )
+    evidence_source: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        default="INITIAL_ESTIMATE",
+        nullable=True,
+    )
+    evaluation_date: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )

@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -11,18 +11,26 @@ class ProfileCreate(BaseModel):
     """Schema for submitting professional profile details."""
 
     department_id: Optional[uuid.UUID] = Field(None, description="Assigned Department UUID")
+    department: Optional[str] = Field(None, max_length=150, description="Department name or division")
     designation: Optional[str] = Field(None, max_length=100, description="Job designation / title")
+    job_role: Optional[str] = Field(None, max_length=100, description="Functional job role")
+    current_assignment: Optional[str] = Field(None, description="Description of current work/assignment")
     employment_type: str = Field(
         "GOVERNMENT_OFFICER",
         description="Employment type: GOVERNMENT_OFFICER, CONTRACTUAL, TRAINEE, STUDENT, OTHER",
     )
     experience_years: float = Field(0.0, ge=0.0, description="Total years of professional experience")
+    experience: Optional[Union[float, str]] = Field(None, description="Experience alias or range option")
     education_level: str = Field(
         "BACHELORS",
         description="Highest education level: HIGH_SCHOOL, DIPLOMA, BACHELORS, MASTERS, PHD, OTHER",
     )
+    education: Optional[str] = Field(None, description="Education level alias")
     specialization: Optional[str] = Field(None, max_length=100, description="Academic specialization or major")
     current_work_area: Optional[str] = Field(None, max_length=150, description="Current division or functional area")
+    previous_trainings: Optional[str] = Field(None, description="Previous courses or training programs")
+    professional_goal: Optional[str] = Field(None, description="Career and learning objectives")
+    career_goal: Optional[str] = Field(None, description="Career goal alias")
     location: Optional[str] = Field(None, max_length=100, description="Posting city or headquarters location")
     bio: Optional[str] = Field(None, description="Brief professional background statement")
 
@@ -31,12 +39,20 @@ class ProfileUpdate(BaseModel):
     """Schema for updating professional profile details."""
 
     department_id: Optional[uuid.UUID] = None
+    department: Optional[str] = None
     designation: Optional[str] = None
+    job_role: Optional[str] = None
+    current_assignment: Optional[str] = None
     employment_type: Optional[str] = None
     experience_years: Optional[float] = Field(None, ge=0.0)
+    experience: Optional[Union[float, str]] = None
     education_level: Optional[str] = None
+    education: Optional[str] = None
     specialization: Optional[str] = None
     current_work_area: Optional[str] = None
+    previous_trainings: Optional[str] = None
+    professional_goal: Optional[str] = None
+    career_goal: Optional[str] = None
     location: Optional[str] = None
     bio: Optional[str] = None
 
@@ -48,14 +64,23 @@ class ProfileResponse(BaseModel):
 
     id: uuid.UUID
     user_id: uuid.UUID
+    full_name: Optional[str] = None
     department_id: Optional[uuid.UUID] = None
     department_name: Optional[str] = None
+    department: Optional[str] = None
     designation: Optional[str] = None
+    job_role: Optional[str] = None
+    current_assignment: Optional[str] = None
     employment_type: str
     experience_years: float
+    experience: Optional[Union[float, str]] = None
     education_level: str
+    education: Optional[str] = None
     specialization: Optional[str] = None
     current_work_area: Optional[str] = None
+    previous_trainings: Optional[str] = None
+    professional_goal: Optional[str] = None
+    career_goal: Optional[str] = None
     location: Optional[str] = None
     bio: Optional[str] = None
     profile_completed: bool
@@ -64,6 +89,15 @@ class ProfileResponse(BaseModel):
     onboarding_step: int
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("department", mode="before")
+    @classmethod
+    def serialize_department(cls, v: Any) -> Optional[str]:
+        if hasattr(v, "name"):
+            return v.name
+        if isinstance(v, str):
+            return v
+        return None
 
 
 class SkillDeclarationCreate(BaseModel):
@@ -242,3 +276,120 @@ class UserProfileSummaryResponse(BaseModel):
     professional_profile: Dict[str, Any]
     onboarding: Dict[str, Any]
     summary: Dict[str, Any]
+
+
+class ProfileAnalysisRequest(BaseModel):
+    """Optional payload for direct profile analysis."""
+
+    department: Optional[str] = Field(None, max_length=150, description="Department name or division")
+    designation: Optional[str] = Field(None, max_length=100, description="Job designation / title")
+    job_role: Optional[str] = Field(None, max_length=100, description="Functional job role")
+    current_assignment: Optional[str] = Field(None, description="Description of current work/assignment")
+    assignment: Optional[str] = Field(None, description="Alias for current_assignment")
+    employment_type: Optional[str] = Field(None, description="Employment type")
+    experience_years: Optional[float] = Field(None, ge=0.0, description="Total years of professional experience")
+    experience: Optional[Union[float, str]] = Field(None, description="Experience alias or range option")
+    education_level: Optional[str] = Field(None, description="Highest education level")
+    education: Optional[str] = Field(None, description="Education level alias")
+    specialization: Optional[str] = Field(None, max_length=100, description="Academic specialization or major")
+    current_work_area: Optional[str] = Field(None, max_length=150, description="Current division or functional area")
+    previous_trainings: Optional[str] = Field(None, description="Previous courses or training programs")
+    professional_goal: Optional[str] = Field(None, description="Career and learning objectives")
+    career_goal: Optional[str] = Field(None, description="Career goal alias")
+    location: Optional[str] = Field(None, max_length=100, description="Posting city or headquarters location")
+    bio: Optional[str] = Field(None, description="Brief professional background statement")
+
+
+class SuggestedCompetencyResponse(BaseModel):
+    """Structured AI competency recommendation based on learner profile."""
+
+    competency_id: uuid.UUID
+    competency_name: str
+    domain: str
+    relevance_reason: str
+    required_level: float
+    priority: str
+
+
+class AcceptedCompetencyItem(BaseModel):
+    """Item accepted by learner during competency review."""
+
+    competency_id: uuid.UUID
+    competency_name: Optional[str] = None
+    domain: Optional[str] = None
+    required_level: Optional[float] = 3.0
+    priority: Optional[str] = "MEDIUM"
+
+
+class AcceptCompetenciesRequest(BaseModel):
+    """Payload of competencies accepted by learner."""
+
+    competencies: List[AcceptedCompetencyItem]
+
+
+class AcceptCompetenciesResponse(BaseModel):
+    """Confirmation returned when learner accepts recommended competencies."""
+
+    status: str
+    message: str
+    saved_count: int
+    competency_ids: List[uuid.UUID]
+
+
+# =============================================================================
+# Part 9D: Competency Evaluation & Skill-Gap Analysis Schemas
+# =============================================================================
+
+class CompetencyEvaluationItem(BaseModel):
+    """Evaluated competency item with current proficiency, benchmark, and gap."""
+
+    competency_id: uuid.UUID
+    competency_name: str
+    competency_code: str
+    domain: str
+    current_level: float
+    current_level_source: str = Field(
+        ...,
+        description="Evidence source: ASSESSED, TRAINING, EXPERIENCE, SELF_REPORTED, INITIAL_ESTIMATE",
+    )
+    required_level: float
+    gap: float = Field(..., ge=0.0, description="Non-negative gap: max(0.0, required - current)")
+    priority: str = Field(..., description="Priority: CRITICAL, HIGH, MEDIUM, LOW, MET")
+    relevance: str = "HIGH"
+    why_required: str
+    evidence: str
+    requirement_met: bool = False
+
+
+class CompetencyEvaluationSummary(BaseModel):
+    """High-level summary indicators for competency evaluation."""
+
+    total_competencies: int
+    requirements_met: int
+    critical_gaps: int
+    high_priority_gaps: int
+    moderate_gaps: int
+    low_priority_gaps: int
+    average_current_level: float
+    average_required_level: float
+    overall_competency_score: Optional[float] = None
+    overall_gap_indicator: str = "Action Required"
+
+
+class LearnerProfileSummaryInfo(BaseModel):
+    """Learner professional profile context displayed on evaluation dashboard."""
+
+    full_name: Optional[str] = None
+    designation: Optional[str] = None
+    job_role: Optional[str] = None
+    department: Optional[str] = None
+    career_goal: Optional[str] = None
+
+
+class CompetencyEvaluationResponse(BaseModel):
+    """Comprehensive competency evaluation and gap analysis response for learner."""
+
+    learner_profile: LearnerProfileSummaryInfo
+    summary: CompetencyEvaluationSummary
+    competencies: List[CompetencyEvaluationItem]
+    evaluated_at: datetime

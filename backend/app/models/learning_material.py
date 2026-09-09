@@ -60,6 +60,12 @@ class LearningMaterial(BaseModel):
         nullable=False,
         index=True,
     )
+    material_type: Mapped[str] = mapped_column(
+        String(50),
+        default="LEARNER_PRACTICE",
+        nullable=False,
+        index=True,
+    )
     is_approved: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -90,3 +96,16 @@ class LearningMaterial(BaseModel):
         back_populates="learning_material",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def has_extracted_text(self) -> bool:
+        """Return True if text has been successfully extracted."""
+        return bool(self.extracted_text and self.extracted_text.strip())
+
+    @property
+    def word_count(self) -> int:
+        """Return estimated word count of the extracted text."""
+        if not self.extracted_text:
+            return 0
+        return len(self.extracted_text.split())
+
