@@ -131,127 +131,127 @@ export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }
             {/* Desktop Horizontal View (lg+) */}
             <div className="hidden lg:grid grid-cols-5 gap-3 relative">
 
-          {/* Connector Line behind steps */}
-          <div className="absolute top-5 left-8 right-8 h-0.5 bg-border -z-0" />
+              {/* Connector Line behind steps */}
+              <div className="absolute top-5 left-8 right-8 h-0.5 bg-border -z-0" />
 
-          {displaySteps.map((step, idx) => (
-            <div key={step.stepNumber} className="relative z-10 flex flex-col items-center text-center">
-              {/* Step indicator node */}
-              <div
-                className={`w-10 h-10 rounded-full border-2 flex items-center justify-center mb-3 transition-transform hover:scale-105 ${getStepCircleClass(
-                  step.status
-                )}`}
-              >
-                {getStepIcon(step.status)}
-              </div>
-
-              {/* Step Card Content */}
-              <div className="w-full bg-[#F8FAFC] border border-border-light rounded-btn p-3.5 flex flex-col justify-between min-h-[190px] transition-all duration-200 hover:border-primary/30 hover:shadow-card-hover text-left">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    <span className="text-[10px] font-bold text-text-muted uppercase font-mono">
-                      Step {step.stepNumber}
-                    </span>
-                    {getStatusBadge(step.status)}
+              {displaySteps.map((step, idx) => (
+                <div key={step.stepNumber} className="relative z-10 flex flex-col items-center text-center">
+                  {/* Step indicator node */}
+                  <div
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center mb-3 transition-transform hover:scale-105 ${getStepCircleClass(
+                      step.status
+                    )}`}
+                  >
+                    {getStepIcon(step.status)}
                   </div>
 
-                  <h4 className="text-xs font-bold text-text-primary mb-1 line-clamp-2 leading-snug">
-                    {step.title}
-                  </h4>
-
-                  <span className="text-[11px] text-text-secondary block mb-2 font-medium">
-                    {step.provider}
-                  </span>
-                </div>
-
-                <div>
-                  {step.status === 'in_progress' && typeof step.progress === 'number' && (
-                    <div className="mb-2.5">
-                      <div className="flex justify-between text-[10px] font-semibold text-primary mb-1">
-                        <span>Progress</span>
-                        <span>{step.progress}%</span>
+                  {/* Step Card Content */}
+                  <div className="w-full bg-[#F8FAFC] border border-border-light rounded-btn p-3.5 flex flex-col justify-between min-h-[190px] transition-all duration-200 hover:border-primary/30 hover:shadow-card-hover text-left">
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-2">
+                        <span className="text-[10px] font-bold text-text-muted uppercase font-mono">
+                          Step {step.stepNumber}
+                        </span>
+                        {getStatusBadge(step.status)}
                       </div>
-                      <ProgressBar value={step.progress} variant="blue" size="sm" />
-                    </div>
-                  )}
 
-                  <div className="pt-2 border-t border-border-light/70 flex items-center justify-between text-[10px] text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {step.duration}
-                    </span>
-                    <span className="truncate max-w-[80px] font-medium text-text-secondary" title={step.skill}>
-                      {step.skill}
-                    </span>
+                      <h4 className="text-xs font-bold text-text-primary mb-1 line-clamp-2 leading-snug">
+                        {step.title}
+                      </h4>
+
+                      <span className="text-[11px] text-text-secondary block mb-2 font-medium">
+                        {step.provider}
+                      </span>
+                    </div>
+
+                    <div>
+                      {step.status === 'in_progress' && typeof step.progress === 'number' && (
+                        <div className="mb-2.5">
+                          <div className="flex justify-between text-[10px] font-semibold text-primary mb-1">
+                            <span>Progress</span>
+                            <span>{step.progress}%</span>
+                          </div>
+                          <ProgressBar value={step.progress} variant="blue" size="sm" />
+                        </div>
+                      )}
+
+                      <div className="pt-2 border-t border-border-light/70 flex items-center justify-between text-[10px] text-text-muted">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {step.duration}
+                        </span>
+                        <span className="truncate max-w-[80px] font-medium text-text-secondary" title={step.skill}>
+                          {step.skill}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Mobile & Tablet Vertical View (< lg) */}
-        <div className="lg:hidden relative pl-6 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-          {displaySteps.map((step) => (
-            <div key={step.stepNumber} className="relative">
-              {/* Timeline Node */}
-              <div
-                className={`absolute -left-6 top-3 w-6 h-6 rounded-full border-2 flex items-center justify-center -translate-x-1/2 ${getStepCircleClass(
-                  step.status
-                )}`}
-              >
-                {step.status === 'completed' ? (
-                  <CheckCircle2 className="w-3 h-3 text-white" />
-                ) : step.status === 'in_progress' ? (
-                  <PlayCircle className="w-3 h-3 text-white" />
-                ) : step.status === 'recommended' ? (
-                  <Sparkles className="w-3 h-3 text-ai-purple" />
-                ) : (
-                  <span className="text-[9px] font-bold text-text-muted">{step.stepNumber}</span>
-                )}
-              </div>
-
-              {/* Step Card */}
-              <div className="bg-[#F8FAFC] border border-border-light rounded-btn p-4 transition-all hover:border-primary/30">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="text-[10px] font-mono font-bold text-text-muted uppercase">
-                    Step {step.stepNumber} • {step.provider}
-                  </span>
-                  {getStatusBadge(step.status)}
-                </div>
-
-                <h4 className="text-sm font-bold text-text-primary mb-1">
-                  {step.title}
-                </h4>
-
-                {step.status === 'in_progress' && typeof step.progress === 'number' && (
-                  <div className="my-2 max-w-xs">
-                    <div className="flex justify-between text-xs font-semibold text-primary mb-1">
-                      <span>In Progress</span>
-                      <span>{step.progress}%</span>
-                    </div>
-                    <ProgressBar value={step.progress} variant="blue" size="sm" />
+            {/* Mobile & Tablet Vertical View (< lg) */}
+            <div className="lg:hidden relative pl-6 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+              {displaySteps.map((step) => (
+                <div key={step.stepNumber} className="relative">
+                  {/* Timeline Node */}
+                  <div
+                    className={`absolute -left-6 top-3 w-6 h-6 rounded-full border-2 flex items-center justify-center -translate-x-1/2 ${getStepCircleClass(
+                      step.status
+                    )}`}
+                  >
+                    {step.status === 'completed' ? (
+                      <CheckCircle2 className="w-3 h-3 text-white" />
+                    ) : step.status === 'in_progress' ? (
+                      <PlayCircle className="w-3 h-3 text-white" />
+                    ) : step.status === 'recommended' ? (
+                      <Sparkles className="w-3 h-3 text-ai-purple" />
+                    ) : (
+                      <span className="text-[9px] font-bold text-text-muted">{step.stepNumber}</span>
+                    )}
                   </div>
-                )}
 
-                <div className="flex items-center gap-4 text-xs text-text-muted mt-2">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {step.duration}
-                  </span>
-                  <span className="flex items-center gap-1 font-medium text-text-secondary">
-                    <BookOpen className="w-3.5 h-3.5 text-teal" />
-                    {step.skill}
-                  </span>
+                  {/* Step Card */}
+                  <div className="bg-[#F8FAFC] border border-border-light rounded-btn p-4 transition-all hover:border-primary/30">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase">
+                        Step {step.stepNumber} • {step.provider}
+                      </span>
+                      {getStatusBadge(step.status)}
+                    </div>
+
+                    <h4 className="text-sm font-bold text-text-primary mb-1">
+                      {step.title}
+                    </h4>
+
+                    {step.status === 'in_progress' && typeof step.progress === 'number' && (
+                      <div className="my-2 max-w-xs">
+                        <div className="flex justify-between text-xs font-semibold text-primary mb-1">
+                          <span>In Progress</span>
+                          <span>{step.progress}%</span>
+                        </div>
+                        <ProgressBar value={step.progress} variant="blue" size="sm" />
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-4 text-xs text-text-muted mt-2">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {step.duration}
+                      </span>
+                      <span className="flex items-center gap-1 font-medium text-text-secondary">
+                        <BookOpen className="w-3.5 h-3.5 text-teal" />
+                        {step.skill}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  </Card>
-);
+          </>
+        )}
+      </div>
+    </Card>
+  );
 
 }

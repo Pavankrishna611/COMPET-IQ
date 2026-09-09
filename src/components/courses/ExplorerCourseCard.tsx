@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { DetailedCourse } from '@/data/courses';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -12,7 +13,7 @@ import {
   Star, 
   Bookmark, 
   ArrowRight,
-  GraduationCap
+  BookOpen
 } from 'lucide-react';
 
 interface ExplorerCourseCardProps {
@@ -38,133 +39,157 @@ export function ExplorerCourseCard({
     }
   };
 
-  const providerBadgeStyles: Record<string, string> = {
-    'iGOT Karmayogi': 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
-    'NSSTA / TPAC': 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
-    'COMPETIQ Learning': 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/60',
+  const getDifficultyBadge = (difficulty: DetailedCourse['difficulty']) => {
+    switch (difficulty) {
+      case 'Beginner':
+        return <Badge variant="success" size="sm">Beginner</Badge>;
+      case 'Intermediate':
+        return <Badge variant="info" size="sm">Intermediate</Badge>;
+      case 'Advanced':
+        return <Badge variant="warning" size="sm">Advanced</Badge>;
+      default:
+        return <Badge variant="neutral" size="sm">{difficulty}</Badge>;
+    }
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-800/80 transition-all duration-200 flex flex-col justify-between group">
+    <Card className="p-5 flex flex-col justify-between border-border transition-all duration-200 hover:border-primary/40 hover:shadow-card-hover bg-surface group">
       <div>
         {/* Top Badges Row */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span
-              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
-                providerBadgeStyles[course.provider] || 'bg-slate-100 text-slate-700'
-              }`}
-            >
-              {course.provider}
-            </span>
-            <Badge variant="neutral" size="sm">
+            {course.provider.includes('iGOT') || course.provider.includes('NSSTA') ? (
+              <Badge variant="teal" size="sm" withDot className="font-bold">
+                {course.provider}
+              </Badge>
+            ) : (
+              <span className="text-[11px] font-bold text-primary bg-primary-light/60 px-2.5 py-0.5 rounded-full border border-primary/20">
+                {course.provider}
+              </span>
+            )}
+            <span className="text-[11px] font-medium text-text-secondary bg-surface-elevated px-2.5 py-0.5 rounded-full border border-border-light">
               {course.domain}
-            </Badge>
+            </span>
+            {getDifficultyBadge(course.difficulty)}
           </div>
 
-          <button
-            type="button"
-            onClick={handleBookmark}
-            title={isSaved ? 'Remove from saved' : 'Save course'}
-            className={`p-1.5 rounded-lg border transition-colors ${
-              isSaved
-                ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400'
-                : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-            }`}
-          >
-            <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {course.isRecommended && (
+              <Badge variant="ai" size="sm" className="font-bold gap-1 text-[10px]">
+                <Sparkles className="w-3 h-3 text-ai-purple" />
+                {course.recommendationScore}% Fit
+              </Badge>
+            )}
+
+            <button
+              type="button"
+              onClick={handleBookmark}
+              title={isSaved ? 'Remove from saved' : 'Save course'}
+              className={`p-1.5 rounded-lg border transition-colors ${
+                isSaved
+                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400'
+                  : 'bg-surface-elevated border-border text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
+            </button>
+          </div>
         </div>
 
-        {/* Title */}
-        <Link href={`/learner/courses/${course.id}`} className="block group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 line-clamp-1 mb-1.5">
+        {/* Course Title */}
+        <Link href={`/learner/courses/${course.id}`} className="block">
+          <h3 className="text-base font-bold text-text-primary group-hover:text-primary transition-colors mb-1.5 leading-snug line-clamp-1">
             {course.title}
           </h3>
         </Link>
 
+        {/* Provider Line */}
+        <p className="text-[11px] text-text-muted mb-2">
+          Provider / Academy: <strong className="text-text-secondary">{course.provider}</strong>
+        </p>
+
         {/* Description */}
-        <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4">
+        <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed mb-4">
           {course.description}
         </p>
 
-        {/* Meta Stats Row */}
-        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80">
-          <div className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span>{course.duration}</span>
+        {/* Meta Stats Row (matching AssessmentCard) */}
+        <div className="flex flex-wrap items-center gap-4 text-xs text-text-secondary mb-4 pb-3 border-b border-border-light">
+          <div className="flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-text-muted" />
+            <span className="font-semibold text-text-primary">{course.modules.length}</span>
+            <span>Modules</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-slate-400" />
-            <span>{course.modules.length} Modules</span>
+
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-text-muted" />
+            <span className="font-semibold text-text-primary">{course.duration}</span>
           </div>
-          <div className="flex items-center gap-1 ml-auto">
+
+          <div className="flex items-center gap-1.5 ml-auto">
             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            <span className="font-semibold text-slate-700 dark:text-slate-200">{course.rating.toFixed(1)}</span>
-            <span className="text-[10px] text-slate-400">({course.enrolledCount})</span>
+            <span className="font-semibold text-text-primary">{course.rating.toFixed(1)}</span>
+            <span className="text-[10px] text-text-muted">({course.enrolledCount})</span>
           </div>
         </div>
+
+        {/* AI Recommendation Box (if recommended) */}
+        {course.isRecommended && (
+          <div className="mb-4 p-3 rounded-xl bg-gradient-to-r from-ai-purple/10 via-teal-light/20 to-transparent border border-ai-purple/20 flex items-start gap-2.5">
+            <div className="p-1 rounded-lg bg-ai-purple/10 text-ai-purple shrink-0 mt-0.5">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1 mb-0.5">
+                <span className="text-[11px] font-bold text-ai-purple">
+                  AI Competency Gap Recommendation
+                </span>
+                <span className="text-[10px] font-bold text-ai-purple font-mono bg-ai-purple/10 px-1.5 py-0.5 rounded">
+                  {course.recommendationScore}% Match
+                </span>
+              </div>
+              <p className="text-[11px] text-text-secondary line-clamp-2 leading-relaxed">
+                {course.whyRecommended}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Skills Chips */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {course.skills.slice(0, 3).map((skill) => (
             <span
               key={skill}
-              className="text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md"
+              className="text-[10px] font-medium bg-surface-elevated border border-border text-text-secondary px-2 py-0.5 rounded-md"
             >
               {skill}
             </span>
           ))}
           {course.skills.length > 3 && (
-            <span className="text-[10px] font-medium text-slate-400 self-center">
+            <span className="text-[10px] font-medium text-text-muted self-center">
               +{course.skills.length - 3} more
             </span>
           )}
         </div>
       </div>
 
-      <div>
-        {/* AI Recommendation Snippet (if recommended) */}
-        {course.isRecommended && (
-          <div className="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl p-3 mb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                AI Recommendation
-              </span>
-              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 font-mono bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded">
-                {course.recommendationScore}% Match
-              </span>
-            </div>
-            <p className="text-[11px] text-indigo-950 dark:text-indigo-200/90 leading-snug line-clamp-2">
-              {course.whyRecommended}
-            </p>
-          </div>
-        )}
+      {/* Footer: Focus Competency & Action CTA */}
+      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border-light">
+        <span className="text-[11px] text-text-muted truncate max-w-[170px]">
+          {course.skills[0] ? `Focus: ${course.skills[0]}` : course.domain}
+        </span>
 
-        {/* Card Footer: Difficulty & View Action */}
-        <div className="flex items-center justify-between pt-2">
-          <Badge
-            variant={
-              course.difficulty === 'Beginner'
-                ? 'success'
-                : course.difficulty === 'Intermediate'
-                ? 'info'
-                : 'warning'
-            }
+        <Link href={`/learner/courses/${course.id}`}>
+          <Button
             size="sm"
+            variant="teal"
+            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+            className="text-xs font-semibold shadow-sm"
           >
-            {course.difficulty}
-          </Badge>
-
-          <Link href={`/learner/courses/${course.id}`}>
-            <Button variant="secondary" size="sm" className="group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all text-xs font-semibold gap-1.5">
-              View Course
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Button>
-          </Link>
-        </div>
+            View Course
+          </Button>
+        </Link>
       </div>
-    </div>
+    </Card>
   );
 }

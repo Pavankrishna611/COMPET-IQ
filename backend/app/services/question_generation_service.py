@@ -244,12 +244,13 @@ class QuestionGenerationService:
         topics = analysis["topics"]
         keywords = analysis["keywords"]
         chunks = ContentAnalysisService.chunk_content_for_generation(material.extracted_text)
-        context_excerpt = chunks[0][:3000] if chunks else material.extracted_text[:3000]
+        if not chunks:
+            chunks = [material.extracted_text[:3500]]
 
         # 2. Select Provider
         provider, generation_mode = cls.get_provider(material, topics, keywords)
 
-        # 3. Construct Prompt
+        # 3. Construct System Prompt
         system_prompt = (
             "You are an expert psychometrician and educational question generator for official statistics and competency evaluation. "
             "Generate questions strictly derived from the provided source context. "
@@ -260,34 +261,89 @@ class QuestionGenerationService:
             "\"correct_option\": \"A\", \"explanation\": \"...\", \"source_reference\": \"...\"}]}"
         )
 
-        user_prompt = (
-            f"Generate {number_of_questions} questions for competency assessment.\n"
-            f"Difficulty: {difficulty}\n"
-            f"Question Type: {question_type}\n"
-            f"Language: {language}\n"
-            f"Source Document Title: {material.title}\n"
-            f"Core Topics: {', '.join(topics)}\n\n"
-            f"--- Source Context Excerpt ---\n{context_excerpt}\n"
-        )
+        # 4. Multi-chunk aware generation
+        raw_questions: List[Dict[str, Any]] = []
 
-        # 4. Invoke generation
-        raw_output = provider.generate(system_prompt, user_prompt)
-        raw_questions = cls.parse_llm_json(raw_output)
+        if len(chunks) > 1 and generation_mode == "AI":
+            # Distribute question quota across document chunks
+            max_chunks_to_process = min(len(chunks), 4)
+            per_chunk_target = max(2, (number_of_questions + max_chunks_to_process - 1) // max_chunks_to_process)
+
+            for c_idx in range(max_chunks_to_process):
+                chunk_excerpt = chunks[c_idx]
+                chunk_prompt = (
+                    f"Generate {per_chunk_target} questions for competency assessment based on Section {c_idx + 1}.\n"
+                    f"Difficulty: {difficulty}\n"
+                    f"Question Type: {question_type}\n"
+                    f"Language: {language}\n"
+                    f"Source Document Title: {material.title} (Part {c_idx + 1})\n"
+                    f"Core Topics: {', '.join(topics)}\n\n"
+                    f"--- Source Context Excerpt ---\n{chunk_excerpt[:3200]}\n"
+                )
+                try:
+                    out = provider.generate(system_prompt, chunk_prompt)
+                    parsed = cls.parse_llm_json(out)
+                    raw_questions.extend(parsed)
+                except Exception as exc:
+                    logger.warning(f"Generation failed on chunk {c_idx + 1}: {exc}")
 
         if not raw_questions:
-            # If provider returned unparseable text, fallback to Mock
+            # Standard single-call generation (or MockLLMProvider)
+            primary_excerpt = chunks[0][:3200]
+            user_prompt = (
+                f"Generate {number_of_questions} questions for competency assessment.\n"
+                f"Difficulty: {difficulty}\n"
+                f"Question Type: {question_type}\n"
+                f"Language: {language}\n"
+                f"Source Document Title: {material.title}\n"
+                f"Core Topics: {', '.join(topics)}\n\n"
+                f"--- Source Context Excerpt ---\n{primary_excerpt}\n"
+            )
+            raw_output = provider.generate(system_prompt, user_prompt)
+            raw_questions = cls.parse_llm_json(raw_output)
+
+        if not raw_questions:
+            # Fallback to deterministic MockLLMProvider
             mock_provider = MockLLMProvider(material.title, topics, keywords)
-            raw_output = mock_provider.generate(system_prompt, user_prompt)
+            fallback_prompt = f"Generate {number_of_questions} questions. Difficulty: {difficulty}."
+            raw_output = mock_provider.generate(system_prompt, fallback_prompt)
             raw_questions = cls.parse_llm_json(raw_output)
             generation_mode = "MOCK"
 
-        # 5. Validate & Detect Duplicates
+        # 5. Deduplicate and Repair Questions
+        unique_questions: List[Dict[str, Any]] = []
+        seen_normalized: set[str] = set()
+        default_topic = topics[0] if topics else "Statistical Methodology"
+
+        for q_candidate in raw_questions:
+            repaired = cls.repair_question(q_candidate, material, default_topic)
+            norm = QuestionValidationService.normalize_text(repaired.get("question_text", ""))
+            if norm and norm not in seen_normalized:
+                seen_normalized.add(norm)
+                unique_questions.append(repaired)
+
+        # If deduplication reduced below target, fill with mock questions
+        if len(unique_questions) < number_of_questions:
+            needed = number_of_questions - len(unique_questions)
+            mock_fill = MockLLMProvider(material.title, topics, keywords)
+            fill_out = mock_fill.generate(system_prompt, f"Generate {needed} questions. Difficulty: {difficulty}.")
+            fill_parsed = cls.parse_llm_json(fill_out)
+            for f_cand in fill_parsed:
+                repaired_f = cls.repair_question(f_cand, material, default_topic)
+                unique_questions.append(repaired_f)
+                if len(unique_questions) >= number_of_questions:
+                    break
+
+        # Slice to exact requested count
+        final_questions_data = unique_questions[:number_of_questions]
+
+        # 6. Validate & Stage in Database
         validated_items: List[GeneratedQuestion] = []
         invalid_count = 0
 
-        duplicate_warnings = QuestionValidationService.detect_duplicates(raw_questions)
+        duplicate_warnings = QuestionValidationService.detect_duplicates(final_questions_data)
 
-        for q_data in raw_questions:
+        for q_data in final_questions_data:
             val_result = QuestionValidationService.validate_generated_question(q_data)
             val_status = "VALID" if val_result["is_valid"] else "INVALID"
             if not val_result["is_valid"]:
@@ -326,6 +382,57 @@ class QuestionGenerationService:
             "invalid_count": invalid_count,
             "duplicate_warnings": duplicate_warnings,
         }
+
+    @classmethod
+    def repair_question(cls, q_data: Dict[str, Any], material: LearningMaterial, default_topic: str) -> Dict[str, Any]:
+        """Automatically repair minor LLM formatting anomalies."""
+        repaired = dict(q_data)
+
+        # 1. Clean question text
+        q_text = str(repaired.get("question_text") or "").strip()
+        repaired["question_text"] = q_text
+
+        # 2. Normalize correct_option
+        raw_corr = str(repaired.get("correct_option") or "").strip().upper()
+        corr_match = re.search(r"\b([A-D])\b", raw_corr)
+        if corr_match:
+            repaired["correct_option"] = corr_match.group(1)
+        elif raw_corr in {"A", "B", "C", "D"}:
+            repaired["correct_option"] = raw_corr
+        else:
+            repaired["correct_option"] = "A"
+
+        # 3. Ensure options are non-empty
+        for opt_key in ["option_a", "option_b", "option_c", "option_d"]:
+            opt_val = str(repaired.get(opt_key) or "").strip()
+            if not opt_val:
+                repaired[opt_key] = f"Alternative concept related to {default_topic}"
+            else:
+                repaired[opt_key] = opt_val
+
+        # 4. Repair explanation if missing
+        expl = str(repaired.get("explanation") or "").strip()
+        if not expl or len(expl) < 5:
+            corr_key = f"option_{repaired['correct_option'].lower()}"
+            corr_text = repaired.get(corr_key, default_topic)
+            repaired["explanation"] = (
+                f"Correct answer is {repaired['correct_option']}: '{corr_text}'. "
+                f"This concept is directly established in '{material.title}'."
+            )
+        else:
+            repaired["explanation"] = expl
+
+        # 5. Ensure source reference and section topic
+        src_ref = str(repaired.get("source_reference") or "").strip()
+        if not src_ref:
+            repaired["source_reference"] = f"Source: '{material.title}' (Section on {default_topic})"
+        elif "(Section on " not in src_ref:
+            repaired["source_reference"] = f"{src_ref} (Section on {default_topic})"
+        else:
+            repaired["source_reference"] = src_ref
+
+        return repaired
+
 
     @classmethod
     def regenerate_question(

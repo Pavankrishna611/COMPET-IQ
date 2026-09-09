@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
 import { mockDetailedCourses, DetailedCourse } from '@/data/courses';
 import { AppShell } from '@/components/layout/AppShell';
 import { 
@@ -230,26 +231,26 @@ export default function LearnerCoursesPage() {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-light pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="neutral" size="sm" className="font-mono text-[11px]">
+            <Badge variant="teal" size="sm" className="font-mono text-[11px]">
               Unified Catalog: iGOT + NSSTA
             </Badge>
-            <span className="text-xs text-slate-400">MoSPI Capacity Building</span>
+            <span className="text-xs text-text-muted">MoSPI Capacity Building</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
             Course Explorer
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+          <p className="text-sm text-text-secondary mt-1 max-w-3xl">
             Browse and discover MoSPI-aligned courses from iGOT Karmayogi, NSSTA, and specialized official statistical training programs.
           </p>
         </div>
 
         {/* Link to Personalized Learning Path */}
         <Link href="/learner/learning-path" className="shrink-0">
-          <Button variant="secondary" size="sm" className="text-xs font-semibold gap-2 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40">
-            <Route className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <Button variant="secondary" size="sm" className="text-xs font-semibold gap-2 border-border hover:border-primary/40 hover:bg-surface-elevated text-text-primary">
+            <Route className="w-3.5 h-3.5 text-primary" />
             View Your Learning Path
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
@@ -257,27 +258,27 @@ export default function LearnerCoursesPage() {
       </div>
 
       {/* Structured Roadmap Callout Banner */}
-      <div className="bg-gradient-to-r from-indigo-500/10 via-sky-500/10 to-transparent border border-indigo-200 dark:border-indigo-900/50 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-border bg-surface shadow-card">
         <div className="flex items-center gap-3.5">
-          <div className="p-2 rounded-xl bg-indigo-600 text-white shadow-sm shrink-0">
-            <Sparkles className="w-5 h-5" />
+          <div className="p-2.5 rounded-xl bg-primary-light text-primary border border-primary/20 shrink-0">
+            <Sparkles className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            <h4 className="text-sm font-bold text-text-primary">
               Personalized Learning Trajectory Active
             </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-text-secondary mt-0.5">
               You have an active roadmap targeting your key competency gaps.
             </p>
           </div>
         </div>
 
-        <Link href="/learner/learning-path">
-          <Button variant="primary" size="sm" className="text-xs font-semibold whitespace-nowrap">
+        <Link href="/learner/learning-path" className="shrink-0">
+          <Button variant="teal" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />} className="text-xs font-semibold whitespace-nowrap shadow-sm">
             Continue Stage 2: Python Analysis
           </Button>
         </Link>
-      </div>
+      </Card>
 
       {/* Filter and Search Controls */}
       <CourseSearchAndFilters
@@ -309,7 +310,7 @@ export default function LearnerCoursesPage() {
               <Button
                 variant="secondary"
                 onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-                className="px-6 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="px-6 py-2.5 text-xs font-semibold text-text-secondary border-border hover:bg-surface-elevated hover:text-text-primary"
               >
                 Load More Courses ({filteredCourses.length - visibleCount} remaining)
               </Button>
@@ -318,15 +319,15 @@ export default function LearnerCoursesPage() {
         </div>
       ) : (
         /* Empty State */
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center max-w-md mx-auto space-y-4">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+        <div className="bg-surface border border-border rounded-2xl p-12 text-center max-w-md mx-auto space-y-4 shadow-card">
+          <div className="w-12 h-12 rounded-full bg-surface-elevated flex items-center justify-center mx-auto text-text-muted">
             <FilterX className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="text-base font-bold text-text-primary">
               No courses found
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            <p className="text-xs text-text-secondary mt-1 leading-relaxed">
               We couldn&apos;t find any courses matching your active filter criteria. Try expanding your search or clearing filters.
             </p>
           </div>

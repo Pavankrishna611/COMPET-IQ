@@ -23,7 +23,10 @@ import {
   ArrowRight,
   TrendingUp,
   BrainCircuit,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
+  BookOpen,
+  CheckCircle2
 } from 'lucide-react';
 import { assessmentService, quizService } from '@/services';
 import type { AssessmentResponse, UserAttemptHistoryItem } from '@/types/api';
@@ -52,7 +55,7 @@ export default function LearnerAssessmentsPage() {
             const relatedAttempt = attempts.find((att: UserAttemptHistoryItem) => att.assessment_id === a.id);
             let status: 'available' | 'in_progress' | 'completed' = 'available';
             if (relatedAttempt) {
-              if (relatedAttempt.status === 'COMPLETED') status = 'completed';
+              if (relatedAttempt.status === 'COMPLETED' || relatedAttempt.status === 'EVALUATED') status = 'completed';
               else if (relatedAttempt.status === 'IN_PROGRESS') status = 'in_progress';
             }
 
@@ -80,8 +83,11 @@ export default function LearnerAssessmentsPage() {
               actionRoute: status === 'completed' && relatedAttempt?.attempt_id
                 ? `/learner/quiz/result?attempt_id=${relatedAttempt.attempt_id}`
                 : `/learner/quiz?assessment_id=${a.id}`,
-              description: a.description || 'Standardized assessment evaluating core knowledge and application.',
-              category: 'Diagnostic',
+              description: a.description || 'Standardized official assessment evaluating core knowledge and application.',
+              category: 'Official Assessment',
+              dueDate: a.due_date ? new Date(a.due_date).toLocaleDateString() : undefined,
+              author: 'Faculty Trainer (MoSPI)',
+              isOfficial: true,
             };
           });
 
@@ -154,7 +160,7 @@ export default function LearnerAssessmentsPage() {
       ]}
       defaultRole="learner"
     >
-      <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      <div className="space-y-10 max-w-7xl mx-auto pb-16">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-light pb-6">
           <div>
@@ -170,17 +176,24 @@ export default function LearnerAssessmentsPage() {
               My Assessments
             </h1>
             <p className="text-sm text-text-secondary mt-1 max-w-3xl">
-              Evaluate your competencies and track your learning progress through standardized diagnostic tests.
+              Evaluate your competencies and track your learning progress through assigned official tests and personal AI practice.
             </p>
           </div>
 
-          <Link href="/learner/learning-path">
-            <Button variant="secondary" size="sm" className="text-xs font-semibold gap-2 shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              View Learning Path
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/learner/quiz-generator">
+              <Button variant="secondary" size="sm" className="text-xs font-semibold gap-1.5 shrink-0">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                AI Practice
+              </Button>
+            </Link>
+            <Link href="/learner/learning-path">
+              <Button variant="secondary" size="sm" className="text-xs font-semibold gap-2 shrink-0">
+                View Learning Path
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* 1. Assessment Summary StatCards */}
@@ -190,7 +203,7 @@ export default function LearnerAssessmentsPage() {
             value={counts.available}
             accent="teal"
             icon={<CheckSquare className="w-5 h-5" />}
-            subtitle="Ready for diagnostic check"
+            subtitle="Assigned official tests ready"
           />
           <StatCard
             title="In Progress"
@@ -215,72 +228,77 @@ export default function LearnerAssessmentsPage() {
           />
         </div>
 
-        {/* Diagnostic Callout Banner */}
-        <div className="bg-gradient-to-r from-primary-light/80 via-teal-light/40 to-transparent border border-primary/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="p-2.5 rounded-xl bg-[#123B66] text-white shadow-sm shrink-0">
-              <BrainCircuit className="w-5 h-5" />
+        {/* SECTION A: Official MoSPI Assessments (Assigned by Trainers) */}
+        <section className="space-y-6 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border-light">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-500/20 shrink-0 mt-0.5">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-bold text-text-primary">
+                    Section A: Official Assessments
+                  </h2>
+                  <Badge variant="teal" size="sm" className="font-semibold">
+                    Trainer Assigned
+                  </Badge>
+                </div>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Standardized curriculum evaluations published by faculty trainers. Submissions update your verified competency ratings.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-text-primary">
-                Diagnostic Assessment Ready: Python &amp; Official Statistics
-              </h4>
-              <p className="text-xs text-text-secondary">
-                Completing assessments updates your competency ratings and unlocks advanced roadmap stages.
-              </p>
+
+            {counts.available > 0 && (
+              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-full shrink-0">
+                {counts.available} Available to Attempt
+              </span>
+            )}
+          </div>
+
+          {/* Filter and Search Bar */}
+          <div className="bg-surface border border-border rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search official assessments by title, competency (Python, SQL, GIS)..."
+                className="w-full pl-10 pr-4 py-2 bg-surface-elevated border border-border rounded-xl text-xs text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-muted whitespace-nowrap hidden sm:inline">
+                Competency:
+              </span>
+              <select
+                value={selectedCompetency}
+                onChange={(e) => setSelectedCompetency(e.target.value)}
+                className="px-3 py-2 bg-surface-elevated border border-border rounded-xl text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+              >
+                <option value="all">All Competencies</option>
+                {competencies
+                  .filter((c) => c !== 'all')
+                  .map((comp) => (
+                    <option key={comp} value={comp}>
+                      {comp}
+                    </option>
+                  ))}
+              </select>
             </div>
           </div>
 
-          <Link href="/learner/quiz">
-            <Button variant="primary" size="sm" className="text-xs font-semibold whitespace-nowrap shadow-sm">
-              Launch Diagnostic Assessment
-            </Button>
-          </Link>
-        </div>
-
-        {/* Filter and Search Bar */}
-        <div className="bg-surface border border-border rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search assessments by title, competency (Python, SQL, GIS)..."
-              className="w-full pl-10 pr-4 py-2 bg-surface-elevated border border-border rounded-xl text-xs text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted whitespace-nowrap hidden sm:inline">
-              Competency:
-            </span>
-            <select
-              value={selectedCompetency}
-              onChange={(e) => setSelectedCompetency(e.target.value)}
-              className="px-3 py-2 bg-surface-elevated border border-border rounded-xl text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
-            >
-              <option value="all">All Competencies</option>
-              {competencies
-                .filter((c) => c !== 'all')
-                .map((comp) => (
-                  <option key={comp} value={comp}>
-                    {comp}
-                  </option>
-                ))}
-            </select>
-          </div>
-        </div>
-
-        {/* 2. Assessment Tabs */}
-        <div className="space-y-6">
+          {/* Assessment Tabs */}
           <AssessmentTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
             counts={counts}
           />
 
-          {/* 3. Assessment Cards Grid */}
+          {/* Assessment Cards Grid */}
           {filteredAssessments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAssessments.map((assessment) => (
@@ -317,7 +335,83 @@ export default function LearnerAssessmentsPage() {
               </Button>
             </div>
           )}
-        </div>
+        </section>
+
+        {/* SECTION B: Personal AI Practice (Isolated Self-Study) */}
+        <section className="space-y-4 pt-6 border-t border-border-light">
+          <div className="flex items-center gap-2 pb-1">
+            <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-lg sm:text-xl font-bold text-text-primary">
+              Section B: Personal AI Practice &amp; Self-Study
+            </h2>
+            <Badge variant="neutral" size="sm" className="font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+              Formative Practice
+            </Badge>
+          </div>
+
+          <div className="bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-surface dark:from-indigo-950/20 dark:via-purple-950/10 dark:to-surface border border-indigo-200/60 dark:border-indigo-800/40 rounded-2xl p-6 sm:p-7 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-3 max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-xl bg-indigo-600 text-white shadow-sm">
+                    <BrainCircuit className="w-5 h-5" />
+                  </span>
+                  <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 tracking-wide uppercase">
+                    Personal Learning Copilot
+                  </span>
+                  <span className="text-xs text-text-muted">• Zero Stakes</span>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-text-primary">
+                    AI Practice Quizzes from Your Own Uploaded Materials
+                  </h3>
+                  <p className="text-xs text-text-secondary leading-relaxed mt-1">
+                    Upload your own study guides, lecture PDFs, and notes to instantly generate personal practice MCQs with instant scoring and AI weak-topic analysis. Practice attempts are <strong>strictly formative</strong> and do not modify your official civil service competency ratings.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 text-xs text-text-muted pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Personal Materials (PDF, DOCX, TXT)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>AI Weak-Topic Diagnostic</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Detailed Remediations</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+                <Link href="/learner/quiz-generator">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="w-full justify-center text-xs font-semibold gap-2 shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Generate Practice Quiz
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/learner/materials">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full justify-center text-xs font-medium text-text-secondary"
+                  >
+                    Manage Uploaded Materials
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </AppShell>
   );

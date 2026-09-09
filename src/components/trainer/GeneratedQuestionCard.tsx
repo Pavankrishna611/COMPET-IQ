@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import { QuizQuestionItem } from '@/data/questions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { 
-  Edit3, 
-  RotateCcw, 
-  Trash2, 
-  CheckCircle2, 
-  BookOpen, 
-  AlertCircle 
+import {
+  Edit3,
+  RotateCcw,
+  Trash2,
+  CheckCircle2,
+  BookOpen,
+  AlertCircle
 } from 'lucide-react';
 
 interface GeneratedQuestionCardProps {
@@ -49,8 +49,8 @@ export function GeneratedQuestionCard({
               question.difficulty === 'Beginner'
                 ? 'success'
                 : question.difficulty === 'Intermediate'
-                ? 'info'
-                : 'warning'
+                  ? 'info'
+                  : 'warning'
             }
             size="sm"
           >
@@ -128,19 +128,17 @@ export function GeneratedQuestionCard({
           return (
             <div
               key={opt.key}
-              className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 transition-all ${
-                isCorrect
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 shadow-xs'
-                  : 'bg-surface-elevated/40 border-border-light text-text-secondary'
-              }`}
+              className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 transition-all ${isCorrect
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 shadow-xs'
+                : 'bg-surface-elevated/40 border-border-light text-text-secondary'
+                }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
-                  className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0 ${
-                    isCorrect
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-surface border border-border text-text-muted'
-                  }`}
+                  className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-mono font-bold shrink-0 ${isCorrect
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-surface border border-border text-text-muted'
+                    }`}
                 >
                   {opt.key}
                 </span>

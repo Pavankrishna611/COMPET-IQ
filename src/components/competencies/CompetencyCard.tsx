@@ -92,13 +92,12 @@ export function CompetencyCard({ competency, onViewDetails }: CompetencyCardProp
               Gap
             </span>
             <span
-              className={`text-sm font-bold font-mono ${
-                competency.gap > 1.0
+              className={`text-sm font-bold font-mono ${competency.gap > 1.0
                   ? 'text-critical'
                   : competency.gap > 0
-                  ? 'text-warning'
-                  : 'text-success'
-              }`}
+                    ? 'text-warning'
+                    : 'text-success'
+                }`}
             >
               {competency.gap > 0 ? `-${competency.gap.toFixed(1)}` : 'Met'}
             </span>
@@ -122,13 +121,12 @@ export function CompetencyCard({ competency, onViewDetails }: CompetencyCardProp
               title={`Required Level: ${competency.requiredLevel}`}
             />
             <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                competency.gap > 1.0
+              className={`h-full rounded-full transition-all duration-300 ${competency.gap > 1.0
                   ? 'bg-critical'
                   : competency.gap > 0
-                  ? 'bg-warning'
-                  : 'bg-success'
-              }`}
+                    ? 'bg-warning'
+                    : 'bg-success'
+                }`}
               style={{ width: `${currentPct}%` }}
               title={`Current Level: ${competency.currentLevel}`}
             />

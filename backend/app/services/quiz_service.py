@@ -13,6 +13,7 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.models.assessment import Assessment
+from app.models.assessment_assignment import AssessmentAssignment
 from app.models.assessment_attempt import AssessmentAttempt
 from app.models.competency import Competency
 from app.models.question import Question
@@ -55,6 +56,24 @@ class QuizService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot start an unpublished assessment.",
             )
+
+        # Enforce learner assignment authorization
+        user = db.query(User).filter(User.id == user_id).first()
+        role_name = user.role.name if user and user.role else ""
+        if role_name == "LEARNER":
+            assignment = (
+                db.query(AssessmentAssignment)
+                .filter(
+                    AssessmentAssignment.assessment_id == assessment_id,
+                    AssessmentAssignment.user_id == user_id,
+                )
+                .first()
+            )
+            if not assignment:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You are not assigned to this official assessment.",
+                )
 
         # Check for existing IN_PROGRESS attempt
         existing_attempt = (
@@ -438,6 +457,18 @@ class QuizService:
         attempt.total_questions = total_questions
         attempt.correct_answers = correct_count
         attempt.time_taken_seconds = time_taken
+
+        # Update assignment status if present
+        assignment = (
+            db.query(AssessmentAssignment)
+            .filter(
+                AssessmentAssignment.assessment_id == attempt.assessment_id,
+                AssessmentAssignment.user_id == user_id,
+            )
+            .first()
+        )
+        if assignment:
+            assignment.status = "COMPLETED"
 
         db.commit()
         db.refresh(attempt)

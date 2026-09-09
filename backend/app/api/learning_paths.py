@@ -99,3 +99,20 @@ def get_my_learning_path_history(
 ) -> List[LearningPathResponse]:
     """Return historical learning journeys."""
     return learning_path_service.get_learning_path_history(db, current_user.id)
+
+
+@router.post(
+    "/add-course/{course_id}",
+    response_model=LearningPathItemResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add Course to Learning Path",
+    description="Add a recommended course to the learner's active learning path without creating duplicates.",
+)
+def add_course_to_learning_path(
+    course_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> LearningPathItemResponse:
+    """Add course directly to user's active learning path."""
+    return learning_path_service.add_course_to_learning_path(db, current_user, course_id)
+

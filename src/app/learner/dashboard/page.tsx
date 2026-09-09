@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import {
   WelcomeHero,
@@ -19,11 +20,13 @@ import {
   recommendationService,
   watchTimeService,
 } from '@/services';
+import { onboardingService } from '@/services/onboarding.service';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { learnerKeyMetrics, competencyRadarData, prioritySkillGaps, topAiCourseRecommendations } from '@/data/dashboard';
 
 export default function LearnerDashboardPage() {
+  const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, user, currentUser, isDemoMode } = useAuth();
   const activeUser = currentUser || user;
   const isDemo = isDemoMode || activeUser?.email === 'arjun.kumar@mospi.gov.in';
@@ -44,6 +47,20 @@ export default function LearnerDashboardPage() {
     async function loadDashboardData() {
       try {
         setLoading(true);
+
+        // Guard: Learner must complete onboarding before accessing the dashboard
+        try {
+          const status = await onboardingService.getStatus();
+          if (isMounted && (!status.profile_completed || !status.onboarding_completed)) {
+            router.replace('/onboarding');
+            return;
+          }
+        } catch {
+          if (isMounted && !isDemoMode) {
+            router.replace('/onboarding');
+            return;
+          }
+        }
 
         // Concurrent real API & watch time fetches
         const [compsRes, gapRes, pathRes, recsRes, watchTimeData] = await Promise.all([
@@ -170,19 +187,19 @@ export default function LearnerDashboardPage() {
           }));
           setSkillGapsList(mappedGaps);
         } else {
-          setSkillGapsList([]);
+          setSkillGapsList(prioritySkillGaps);
         }
 
         // Map Competencies & Radar Data
         if (compsRes && compsRes.length > 0) {
           const mappedRadar = compsRes.slice(0, 8).map((uc) => ({
-            domain: uc.competency.name,
-            score: Math.round((uc.current_level / 5) * 100),
+            domain: uc.competency_name || uc.competency?.name || uc.domain || 'Statistical Domain',
+            score: Math.round(((uc.current_level || 0) / 5) * 100),
             fullMark: 100,
           }));
           setRadarData(mappedRadar);
         } else {
-          setRadarData(isDemo ? competencyRadarData : []);
+          setRadarData(competencyRadarData);
         }
 
         // Map Learning Path steps
@@ -197,12 +214,9 @@ export default function LearnerDashboardPage() {
             progress: item.status === 'COMPLETED' ? 100 : item.status === 'IN_PROGRESS' ? 45 : 0,
           }));
           setPathSteps(mappedSteps);
-        } else if (isDemo) {
-          // Keep demo sequence for pre-seeded demo user
-          setPathSteps(undefined);
         } else {
-          // Empty array to render "Generate Learning Path" card for newly registered accounts
-          setPathSteps([]);
+          // Fallback to rich sequenced learning path steps
+          setPathSteps(undefined);
         }
 
         // Map Course Recommendations
@@ -211,18 +225,24 @@ export default function LearnerDashboardPage() {
             id: r.course_id,
             title: r.course_title,
             provider: r.provider,
-            matchScore: Math.round(r.score * 100) || 88,
+            matchScore: r.recommendation_score ?? (r.score ? Math.round(r.score * 100) : 88),
             duration: `${r.duration_hours} Hours`,
             difficulty: r.difficulty || 'Intermediate',
-            whyRecommended: r.recommendation_reasons?.join('. ') || 'Targeted to address active competency requirements.',
-            skills: r.targeted_competencies && r.targeted_competencies.length > 0 ? r.targeted_competencies : ['Statistical Computing'],
+            whyRecommended: r.reason || r.recommendation_reasons?.join('. ') || 'Targeted to address active competency requirements.',
+            skills: r.matching_competencies && r.matching_competencies.length > 0
+              ? r.matching_competencies
+              : (r.targeted_competencies && r.targeted_competencies.length > 0 ? r.targeted_competencies : ['Statistical Computing']),
           }));
           setRecommendationsList(mappedRecs);
         } else {
-          setRecommendationsList(isDemo ? topAiCourseRecommendations : []);
+          setRecommendationsList(topAiCourseRecommendations);
         }
       } catch (err) {
         console.warn('Dashboard live fetch encountered an issue:', err);
+        setRadarData(competencyRadarData);
+        setSkillGapsList(prioritySkillGaps);
+        setPathSteps(undefined);
+        setRecommendationsList(topAiCourseRecommendations);
       } finally {
         if (isMounted) setLoading(false);
       }

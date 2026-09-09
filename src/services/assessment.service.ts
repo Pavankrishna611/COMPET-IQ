@@ -3,7 +3,13 @@
  */
 
 import { apiClient } from '@/lib/api-client';
-import { AssessmentResponse } from '@/types/api';
+import {
+  AssessmentAssignRequest,
+  AssessmentAssignResult,
+  AssessmentAssignmentResponse,
+  AssessmentResponse,
+  AssignableLearnerResponse,
+} from '@/types/api';
 
 class AssessmentService {
   /**
@@ -35,6 +41,33 @@ class AssessmentService {
   async publishAssessment(assessmentId: string): Promise<AssessmentResponse> {
     return apiClient.post<AssessmentResponse>(`/assessments/${assessmentId}/publish`);
   }
+
+  /**
+   * Trainer/Admin: Assign a published assessment to learners.
+   */
+  async assignAssessment(
+    assessmentId: string,
+    payload: AssessmentAssignRequest
+  ): Promise<AssessmentAssignResult> {
+    return apiClient.post<AssessmentAssignResult>(`/assessments/${assessmentId}/assign`, payload);
+  }
+
+  /**
+   * Trainer/Admin: Retrieve existing assignments for an assessment.
+   */
+  async getAssessmentAssignments(
+    assessmentId: string
+  ): Promise<AssessmentAssignmentResponse[]> {
+    return apiClient.get<AssessmentAssignmentResponse[]>(`/assessments/${assessmentId}/assignments`);
+  }
+
+  /**
+   * Trainer/Admin: Fetch available learners to assign assessments.
+   */
+  async getAssignableLearners(): Promise<AssignableLearnerResponse[]> {
+    return apiClient.get<AssignableLearnerResponse[]>('/assessments/learners/available');
+  }
 }
 
 export const assessmentService = new AssessmentService();
+

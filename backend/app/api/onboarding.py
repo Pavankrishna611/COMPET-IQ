@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
@@ -8,15 +8,22 @@ from app.api.dependencies import get_current_user
 from app.database.session import get_db
 from app.models.user import User
 from app.schemas.onboarding import (
+    AcceptCompetenciesRequest,
+    AcceptCompetenciesResponse,
     AvailableCompetenciesResponse,
     BulkSkillDeclarationRequest,
+    CompetencyEvaluationResponse,
     OnboardingStatusResponse,
+    ProfileAnalysisRequest,
     ProfileCreate,
     ProfileResponse,
     ProfileUpdate,
     SkillDeclarationResponse,
     SkillDeclarationUpdate,
+    SuggestedCompetencyResponse,
 )
+from app.services.competency_analysis_service import competency_analysis_service
+from app.services.competency_evaluation_service import competency_evaluation_service
 from app.services.competency_service import competency_service
 from app.services.profile_service import profile_service
 from app.services.skill_declaration_service import skill_declaration_service
@@ -177,3 +184,90 @@ def delete_declared_skill(
         user=current_user,
         competency_id=competency_id,
     )
+
+
+# -----------------------------------------------------------------------------
+# AI Competency Analysis & Recommendation Endpoints (Part 9C)
+# -----------------------------------------------------------------------------
+@router.post(
+    "/analyze-profile",
+    response_model=List[SuggestedCompetencyResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Analyze Professional Profile for Competencies",
+    description="Run AI-based profile analysis to suggest relevant competencies from the official framework.",
+)
+def analyze_profile(
+    profile_data: Optional[ProfileAnalysisRequest] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> List[SuggestedCompetencyResponse]:
+    """Analyze learner profile and suggest tailored competencies."""
+    return competency_analysis_service.analyze_profile(
+        db=db, user=current_user, profile_override=profile_data
+    )
+
+
+@router.post(
+    "/accept-competencies",
+    response_model=AcceptCompetenciesResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Accept Recommended Competencies",
+    description="Persist competencies accepted by the learner during onboarding review.",
+)
+def accept_competencies(
+    request: AcceptCompetenciesRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> AcceptCompetenciesResponse:
+    """Save learner-accepted competencies into database."""
+    return competency_analysis_service.accept_competencies(db=db, user=current_user, request=request)
+
+
+# -----------------------------------------------------------------------------
+# Competency Evaluation & Skill-Gap Analysis Endpoints (Part 9D)
+# -----------------------------------------------------------------------------
+@router.get(
+    "/competency-evaluation",
+    response_model=CompetencyEvaluationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Competency Evaluation and Skill Gaps",
+    description="Retrieve latest competency evaluation and skill gaps for the authenticated learner.",
+)
+def get_competency_evaluation(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CompetencyEvaluationResponse:
+    """Retrieve or run competency evaluation for the authenticated user."""
+    return competency_evaluation_service.evaluate_user_competencies(db=db, user=current_user)
+
+
+@router.post(
+    "/evaluate-competencies",
+    response_model=CompetencyEvaluationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Evaluate Competencies and Calculate Skill Gaps",
+    description="Trigger competency evaluation, calculate skill gaps against role benchmarks, and persist results.",
+)
+def evaluate_competencies(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CompetencyEvaluationResponse:
+    """Trigger competency evaluation and persist results."""
+    return competency_evaluation_service.evaluate_user_competencies(db=db, user=current_user)
+
+
+@router.post(
+    "/complete",
+    response_model=OnboardingStatusResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Complete Onboarding",
+    description="Mark the authenticated learner's onboarding process as completed.",
+)
+def complete_onboarding(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> OnboardingStatusResponse:
+    """Mark onboarding process as complete."""
+    return profile_service.complete_onboarding(db=db, user=current_user)
+
+

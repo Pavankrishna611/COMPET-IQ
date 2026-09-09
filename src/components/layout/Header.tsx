@@ -88,7 +88,7 @@ export function Header({
     {
       id: 'officer-info',
       label: `${activeUser.designation} (${activeUser.cadre})`,
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       id: 'profile',

@@ -49,12 +49,15 @@ export default function MyCompetenciesPage() {
             const required = 4.0; // benchmark target
             const gap = Math.max(0, Number((required - current).toFixed(1)));
             const status = gap >= 1.2 ? 'Critical Gap' : gap > 0.4 ? 'Moderate Gap' : gap > 0 ? 'Developing' : 'Strong';
-            const domain = (c.competency.domain?.includes('Stat') ? 'Statistical' : c.competency.domain?.includes('Tech') ? 'Technical' : c.competency.domain?.includes('Gov') ? 'Digital Governance' : 'Behavioural & Managerial') as CompetencyDomain;
+            const rawDomain = c.domain || c.competency?.domain || 'Statistical';
+            const domain = (rawDomain.includes('Stat') ? 'Statistical' : rawDomain.includes('Tech') ? 'Technical' : rawDomain.includes('Gov') ? 'Digital Governance' : 'Behavioural & Managerial') as CompetencyDomain;
+            const compName = c.competency_name || c.competency?.name || 'Competency';
+            const compCode = c.competency_code || c.competency?.code || 'COMP';
 
             return {
               id: c.competency_id,
-              name: c.competency.name,
-              code: c.competency.code,
+              name: compName,
+              code: compCode,
               domain: domain,
               currentLevel: current,
               requiredLevel: required,
@@ -62,7 +65,7 @@ export default function MyCompetenciesPage() {
               status: status,
               confidence: (c.confidence_score >= 0.8 ? 'High' : 'Medium') as any,
               lastAssessed: formatDate(c.updated_at || c.created_at),
-              description: c.competency.description || 'Assessed competency proficiency.',
+              description: c.competency?.description || 'Assessed competency proficiency.',
               evidence: {
                 assessmentScore: Math.round((current / 5) * 100),
                 completedCourses: 2,
@@ -71,7 +74,7 @@ export default function MyCompetenciesPage() {
               },
               history: [
                 {
-                  title: `${c.competency.name} Core Assessment`,
+                  title: `${compName} Core Assessment`,
                   status: 'Completed',
                   provider: 'COMPETIQ Assessment System',
                   duration: '45 mins',
@@ -220,24 +223,22 @@ export default function MyCompetenciesPage() {
         <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto">
           <Filter className="w-4 h-4 text-text-muted shrink-0 mr-1" />
           {domainOptions.map((domain) => {
-            const count = domain === 'All' 
-              ? competencies.length 
+            const count = domain === 'All'
+              ? competencies.length
               : competencies.filter((c) => c.domain === domain).length;
 
             return (
               <button
                 key={domain}
                 onClick={() => setSelectedDomain(domain)}
-                className={`px-3.5 py-1.5 rounded-btn text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                  selectedDomain === domain
+                className={`px-3.5 py-1.5 rounded-btn text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${selectedDomain === domain
                     ? 'bg-primary text-white shadow-xs'
                     : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-[#F5F8FC] border border-border'
-                }`}
+                  }`}
               >
                 <span>{domain}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedDomain === domain ? 'bg-white/20 text-white' : 'bg-[#EBF1F7] text-text-secondary'
-                }`}>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${selectedDomain === domain ? 'bg-white/20 text-white' : 'bg-[#EBF1F7] text-text-secondary'
+                  }`}>
                   {count}
                 </span>
               </button>

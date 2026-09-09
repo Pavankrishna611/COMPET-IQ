@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { onboardingService } from '@/services/onboarding.service';
 import { LoadingState } from '@/components/ui';
 
 export default function RootPage() {
@@ -20,11 +21,22 @@ export default function RootPage() {
           router.replace('/admin/dashboard');
           break;
         case 'trainer':
-          router.replace('/trainer/assessment-generator');
+          router.replace('/trainer/dashboard');
           break;
         case 'learner':
         default:
-          router.replace('/learner/dashboard');
+          (async () => {
+            try {
+              const status = await onboardingService.getStatus();
+              if (status.profile_completed && status.onboarding_completed) {
+                router.replace('/learner/dashboard');
+              } else {
+                router.replace('/onboarding');
+              }
+            } catch {
+              router.replace('/onboarding');
+            }
+          })();
           break;
       }
     }

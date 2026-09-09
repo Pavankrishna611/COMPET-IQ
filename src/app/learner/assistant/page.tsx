@@ -174,8 +174,7 @@ export default function LearnerAssistantPage() {
     const transcript = activeThread.messages
       .map(
         (m) =>
-          `[${m.timestamp}] ${m.sender.toUpperCase()}:\n${
-            m.structuredResponse ? m.structuredResponse.answer : m.text
+          `[${m.timestamp}] ${m.sender.toUpperCase()}:\n${m.structuredResponse ? m.structuredResponse.answer : m.text
           }\n`
       )
       .join('\n----------------------------------------\n\n');
@@ -305,15 +304,14 @@ export default function LearnerAssistantPage() {
 
           {/* Center Panel: Main AI Conversation */}
           <div
-            className={`col-span-12 flex flex-col h-full bg-surface border border-border rounded-2xl shadow-xs overflow-hidden ${
-              showLeftSidebar && showRightSidebar
-                ? 'md:col-span-8 lg:col-span-6 xl:col-span-6'
-                : showLeftSidebar && !showRightSidebar
+            className={`col-span-12 flex flex-col h-full bg-surface border border-border rounded-2xl shadow-xs overflow-hidden ${showLeftSidebar && showRightSidebar
+              ? 'md:col-span-8 lg:col-span-6 xl:col-span-6'
+              : showLeftSidebar && !showRightSidebar
                 ? 'md:col-span-8 lg:col-span-9'
                 : !showLeftSidebar && showRightSidebar
-                ? 'md:col-span-8 lg:col-span-9 xl:col-span-9'
-                : 'md:col-span-12'
-            }`}
+                  ? 'md:col-span-8 lg:col-span-9 xl:col-span-9'
+                  : 'md:col-span-12'
+              }`}
           >
             {/* Conversation Feed */}
             <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6">

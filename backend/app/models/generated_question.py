@@ -120,3 +120,15 @@ class GeneratedQuestion(BaseModel):
         "User",
         back_populates="generated_questions",
     )
+
+    @property
+    def topic(self) -> Optional[str]:
+        """Extract subject matter topic from source_reference or fallback to learning material title."""
+        if self.source_reference and "(Section on " in self.source_reference:
+            try:
+                return self.source_reference.split("(Section on ")[1].rstrip(") ").strip()
+            except Exception:
+                pass
+        if self.learning_material and self.learning_material.title:
+            return self.learning_material.title
+        return None

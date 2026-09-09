@@ -6,18 +6,23 @@ Provides administrative and trainer endpoints for assessment creation, publishin
 import uuid
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, require_roles
 from app.database.session import get_db
+from app.models.assessment_assignment import AssessmentAssignment
 from app.models.user import User
 from app.schemas.assessment import (
     AssessmentAnalyticsResponse,
+    AssessmentAssignRequest,
+    AssessmentAssignResult,
+    AssessmentAssignmentResponse,
     AssessmentCreate,
     AssessmentDetailResponse,
     AssessmentResponse,
     AssessmentUpdate,
+    AssignableLearnerResponse,
     QuestionAdminResponse,
     QuestionCreate,
     QuestionLearnerResponse,
@@ -69,7 +74,7 @@ def create_assessment(
     response_model=List[AssessmentResponse],
     status_code=status.HTTP_200_OK,
     summary="List Assessments",
-    description="List all available assessments. Learners only receive PUBLISHED assessments.",
+    description="List all available assessments. Learners only receive PUBLISHED assessments assigned to them.",
 )
 def list_assessments(
     status_filter: Optional[str] = Query(None, alias="status", description="Filter by status (DRAFT, PUBLISHED, ARCHIVED)"),
@@ -86,10 +91,23 @@ def list_assessments(
         status_filter=status_filter,
         difficulty=difficulty,
         is_learner=is_learner,
+        user_id=current_user.id if is_learner else None,
     )
+
+    assignment_map = {}
+    if is_learner:
+        assignments = (
+            db.query(AssessmentAssignment)
+            .filter(AssessmentAssignment.user_id == current_user.id)
+            .all()
+        )
+        assignment_map = {a.assessment_id: a for a in assignments}
 
     results: List[AssessmentResponse] = []
     for ass in assessments:
+        user_assign = assignment_map.get(ass.id)
+        due_date = user_assign.due_date if user_assign else None
+        assigned_count = len(ass.assignments) if hasattr(ass, "assignments") and ass.assignments else 0
         results.append(
             AssessmentResponse(
                 id=ass.id,
@@ -102,6 +120,10 @@ def list_assessments(
                 question_count=len(ass.questions),
                 created_at=ass.created_at,
                 updated_at=ass.updated_at,
+                published_at=ass.published_at,
+                due_date=due_date,
+                assigned_to_me=True if is_learner else None,
+                assigned_learners_count=assigned_count,
             )
         )
     return results
@@ -337,6 +359,21 @@ def get_assessment_questions(
 
 
 @router.get(
+    "/learners/available",
+    response_model=List[AssignableLearnerResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get Assignable Learners (Trainer/Admin)",
+    description="Retrieve all active learners available for assessment assignment.",
+)
+def get_assignable_learners(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("TRAINER", "ADMIN")),
+) -> List[AssignableLearnerResponse]:
+    """List learners available to receive assessment assignments."""
+    return AssessmentService.get_assignable_learners(db=db, current_user=current_user)
+
+
+@router.get(
     "/{assessment_id}",
     response_model=AssessmentDetailResponse,
     status_code=status.HTTP_200_OK,
@@ -352,6 +389,26 @@ def get_assessment_detail(
     assessment = AssessmentService.get_assessment(db=db, assessment_id=assessment_id)
     role_name = current_user.role.name if current_user.role else ""
     is_admin_or_trainer = role_name in {"ADMIN", "TRAINER"}
+
+    if not is_admin_or_trainer:
+        if assessment.status != "PUBLISHED":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access unpublished assessments.",
+            )
+        assigned = (
+            db.query(AssessmentAssignment)
+            .filter(
+                AssessmentAssignment.assessment_id == assessment_id,
+                AssessmentAssignment.user_id == current_user.id,
+            )
+            .first()
+        )
+        if not assigned:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not assigned to this official assessment.",
+            )
 
     questions = AssessmentService.get_assessment_questions(db=db, assessment_id=assessment.id)
 
@@ -466,3 +523,46 @@ def delete_assessment(
         current_user=current_user,
     )
     return {"message": "Assessment deleted successfully."}
+
+
+@router.post(
+    "/{assessment_id}/assign",
+    response_model=AssessmentAssignResult,
+    status_code=status.HTTP_200_OK,
+    summary="Assign Assessment to Learners (Trainer/Admin)",
+    description="Assign a published assessment to selected learners, preventing duplicates.",
+)
+def assign_assessment(
+    assessment_id: uuid.UUID,
+    assign_in: AssessmentAssignRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("TRAINER", "ADMIN")),
+) -> AssessmentAssignResult:
+    """Assign an official published assessment to one or more learners."""
+    return AssessmentService.assign_assessment(
+        db=db,
+        assessment_id=assessment_id,
+        assign_in=assign_in,
+        current_user=current_user,
+    )
+
+
+@router.get(
+    "/{assessment_id}/assignments",
+    response_model=List[AssessmentAssignmentResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get Assessment Assignments (Trainer/Admin)",
+    description="Retrieve existing learner assignments for a published assessment.",
+)
+def get_assessment_assignments(
+    assessment_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("TRAINER", "ADMIN")),
+) -> List[AssessmentAssignmentResponse]:
+    """Retrieve all learner assignments for an assessment."""
+    return AssessmentService.get_assessment_assignments(
+        db=db,
+        assessment_id=assessment_id,
+        current_user=current_user,
+    )
+

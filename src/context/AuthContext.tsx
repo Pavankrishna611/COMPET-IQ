@@ -37,26 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
   const router = useRouter();
 
-  const navigateForRole = useCallback(async (targetRole: Role, isDemoAccount = false) => {
+  const navigateForRole = useCallback(async (targetRole: Role) => {
     if (targetRole === 'admin') {
       router.push('/admin/dashboard');
     } else if (targetRole === 'trainer') {
-      router.push('/trainer/assessment-generator');
+      router.push('/trainer/dashboard');
     } else if (targetRole === 'learner') {
-      if (isDemoAccount) {
-        router.push('/learner/dashboard');
-      } else {
-        try {
-          const status = await onboardingService.getStatus();
-          if (status.onboarding_completed) {
-            router.push('/learner/dashboard');
-          } else {
-            router.push('/onboarding/profile');
-          }
-        } catch {
-          // If onboarding status check fails or profile doesn't exist yet, redirect to onboarding profile
-          router.push('/onboarding/profile');
+      try {
+        const status = await onboardingService.getStatus();
+        if (status.profile_completed && status.onboarding_completed) {
+          router.push('/learner/dashboard');
+        } else {
+          router.push('/onboarding');
         }
+      } catch {
+        // If onboarding status check fails or profile doesn't exist yet, redirect to onboarding
+        router.push('/onboarding');
       }
     }
   }, [router]);
@@ -134,11 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsDemoMode(false);
       authStorage.setStoredUser(adapted);
 
-      const isDemo =
-        officialIdOrEmail.toLowerCase() === 'arjun.kumar@mospi.gov.in' ||
-        officialIdOrEmail.trim() === 'SSS-2021-0892';
-
-      await navigateForRole(adapted.role, isDemo);
+      await navigateForRole(adapted.role);
       return true;
     } catch (err: any) {
       console.error('Login error:', err);
@@ -171,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsDemoMode(false);
       authStorage.setStoredUser(adapted);
 
-      await navigateForRole(adapted.role, true);
+      await navigateForRole(adapted.role);
     } catch (err) {
       console.warn('Backend authentication unavailable for 1-click role. Falling back to demo mode:', err);
       // Fallback for offline development
@@ -182,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authStorage.setStoredRole(selectedRole);
       authStorage.setStoredUser(mockUser);
 
-      await navigateForRole(selectedRole, true);
+      await navigateForRole(selectedRole);
     } finally {
       setIsLoading(false);
     }
@@ -190,6 +182,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     authService.logout();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('competiq_onboarding_completed');
+    }
     setRole(null);
     setCurrentUser(null);
     setIsDemoMode(false);

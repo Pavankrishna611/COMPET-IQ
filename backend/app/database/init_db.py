@@ -889,6 +889,26 @@ def init_db(raise_on_error: bool = False) -> bool:
                     prof_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(user_profiles)")).fetchall()]
                     if "competency_initialized" not in prof_cols:
                         conn.execute(text("ALTER TABLE user_profiles ADD COLUMN competency_initialized BOOLEAN DEFAULT 0 NOT NULL"))
+                    if "job_role" not in prof_cols:
+                        conn.execute(text("ALTER TABLE user_profiles ADD COLUMN job_role VARCHAR(100)"))
+                    if "current_assignment" not in prof_cols:
+                        conn.execute(text("ALTER TABLE user_profiles ADD COLUMN current_assignment VARCHAR(200)"))
+                    if "previous_trainings" not in prof_cols:
+                        conn.execute(text("ALTER TABLE user_profiles ADD COLUMN previous_trainings TEXT"))
+                    if "professional_goal" not in prof_cols:
+                        conn.execute(text("ALTER TABLE user_profiles ADD COLUMN professional_goal TEXT"))
+
+                    asmt_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(assessments)")).fetchall()]
+                    if "assessment_type" not in asmt_cols:
+                        conn.execute(text("ALTER TABLE assessments ADD COLUMN assessment_type VARCHAR(50) DEFAULT 'OFFICIAL'"))
+                    if "published_at" not in asmt_cols:
+                        conn.execute(text("ALTER TABLE assessments ADD COLUMN published_at TIMESTAMP"))
+                    if "created_by" not in asmt_cols:
+                        conn.execute(text("ALTER TABLE assessments ADD COLUMN created_by CHAR(32)"))
+
+                    mat_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(learning_materials)")).fetchall()]
+                    if "material_type" not in mat_cols:
+                        conn.execute(text("ALTER TABLE learning_materials ADD COLUMN material_type VARCHAR(50) DEFAULT 'LEARNER_PRACTICE'"))
         except Exception as col_err:
             logger.debug(f"Column verification notice: {col_err}")
 

@@ -85,12 +85,12 @@ export function ActivityTimeline() {
                         </Badge>
                       )}
                     </div>
-                    <span className="text-[11px] text-text-muted block mt-0.5">
+                    <span className="text-[11px] font-medium text-text-secondary block mt-0.5">
                       {act.meta}
                     </span>
                   </div>
 
-                  <span className="text-[10px] text-text-muted whitespace-nowrap shrink-0 flex items-center gap-1 font-mono">
+                  <span className="text-[10px] font-semibold text-text-secondary whitespace-nowrap shrink-0 flex items-center gap-1 font-mono">
                     <Clock className="w-3 h-3" />
                     {act.timestamp}
                   </span>

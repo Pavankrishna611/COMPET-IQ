@@ -4,13 +4,18 @@
 
 import { apiClient } from '@/lib/api-client';
 import {
+  AcceptCompetenciesRequest,
+  AcceptCompetenciesResponse,
   AvailableCompetenciesResponse,
   BulkSkillDeclarationRequest,
+  CompetencyEvaluationResponse,
   OnboardingStatusResponse,
+  ProfileAnalysisRequest,
   ProfileCreate,
   ProfileResponse,
   ProfileUpdate,
   SkillDeclarationResponse,
+  SuggestedCompetencyResponse,
 } from '@/types/api';
 
 class OnboardingService {
@@ -43,6 +48,23 @@ class OnboardingService {
   }
 
   /**
+   * Save (create or update) the authenticated user's professional profile.
+   */
+  async saveProfile(data: ProfileCreate): Promise<ProfileResponse> {
+    try {
+      return await this.createProfile(data);
+    } catch (err: any) {
+      if (
+        err.status === 400 ||
+        (typeof err.detail === 'string' && err.detail.toLowerCase().includes('already exists'))
+      ) {
+        return await this.updateProfile(data as ProfileUpdate);
+      }
+      throw err;
+    }
+  }
+
+  /**
    * Fetch all available competencies grouped by domain for skill selection.
    */
   async getAvailableCompetencies(): Promise<AvailableCompetenciesResponse> {
@@ -61,6 +83,45 @@ class OnboardingService {
    */
   async getMySkills(): Promise<SkillDeclarationResponse[]> {
     return apiClient.get<SkillDeclarationResponse[]>('/onboarding/skills/me');
+  }
+
+  /**
+   * AI Analysis of professional profile to suggest relevant competencies from framework (Part 9C).
+   */
+  async analyzeProfile(data?: ProfileAnalysisRequest): Promise<SuggestedCompetencyResponse[]> {
+    return apiClient.post<SuggestedCompetencyResponse[]>('/onboarding/analyze-profile', data || {});
+  }
+
+  /**
+   * Persist learner-accepted competencies into database during onboarding review (Part 9C).
+   */
+  async acceptCompetencies(data: AcceptCompetenciesRequest): Promise<AcceptCompetenciesResponse> {
+    return apiClient.post<AcceptCompetenciesResponse>('/onboarding/accept-competencies', data);
+  }
+
+  /**
+   * Fetch latest competency evaluation and skill gaps for authenticated user (Part 9D).
+   */
+  async getCompetencyEvaluation(): Promise<CompetencyEvaluationResponse> {
+    return apiClient.get<CompetencyEvaluationResponse>('/onboarding/competency-evaluation');
+  }
+
+  /**
+   * Trigger competency evaluation and skill gap calculation (Part 9D).
+   */
+  async evaluateCompetencies(): Promise<CompetencyEvaluationResponse> {
+    return apiClient.post<CompetencyEvaluationResponse>('/onboarding/evaluate-competencies', {});
+  }
+
+  /**
+   * Complete the onboarding process and mark onboarding_completed in profile.
+   */
+  async completeOnboarding(): Promise<OnboardingStatusResponse> {
+    const res = await apiClient.post<OnboardingStatusResponse>('/onboarding/complete', {});
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('competiq_onboarding_completed', 'true');
+    }
+    return res;
   }
 }
 

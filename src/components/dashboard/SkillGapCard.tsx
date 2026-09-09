@@ -69,9 +69,8 @@ export function DashboardSkillGapCard({ gapItem }: DashboardSkillGapCardProps) {
               Gap Delta
             </span>
             <span
-              className={`text-sm font-bold font-mono ${
-                isCritical ? 'text-critical' : 'text-warning'
-              }`}
+              className={`text-sm font-bold font-mono ${isCritical ? 'text-critical' : 'text-warning'
+                }`}
             >
               -{gapItem.gap.toFixed(1)}
             </span>
@@ -97,9 +96,8 @@ export function DashboardSkillGapCard({ gapItem }: DashboardSkillGapCardProps) {
             />
             {/* Current Level fill */}
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                isCritical ? 'bg-critical' : 'bg-warning'
-              }`}
+              className={`h-full rounded-full transition-all duration-500 ${isCritical ? 'bg-critical' : 'bg-warning'
+                }`}
               style={{ width: `${currentPct}%` }}
               title={`Current Level: ${gapItem.currentLevel} (${currentPct}%)`}
             />
@@ -108,9 +106,8 @@ export function DashboardSkillGapCard({ gapItem }: DashboardSkillGapCardProps) {
           <div className="flex justify-between text-[10px] text-text-muted">
             <span className="flex items-center gap-1">
               <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isCritical ? 'bg-critical' : 'bg-warning'
-                }`}
+                className={`w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-critical' : 'bg-warning'
+                  }`}
               />
               Current ({gapItem.currentLevel})
             </span>

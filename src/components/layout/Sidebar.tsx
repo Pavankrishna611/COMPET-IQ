@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Route,
   BookOpen,
+  BookmarkCheck,
   ClipboardCheck,
   Sparkles,
   Users,
@@ -36,6 +37,7 @@ const iconMap: Record<string, LucideIcon> = {
   AlertTriangle,
   Route,
   BookOpen,
+  BookmarkCheck,
   ClipboardCheck,
   Sparkles,
   Users,
@@ -135,8 +137,8 @@ export function Sidebar({
               {currentRole === 'admin'
                 ? 'Administration & Workforce'
                 : currentRole === 'trainer'
-                ? 'Trainer Management'
-                : 'Competency & Learning'}
+                  ? 'Trainer Management'
+                  : 'Competency & Learning'}
             </span>
           )}
 
@@ -145,7 +147,7 @@ export function Sidebar({
             const isActive =
               pathname === item.href ||
               (pathname.startsWith(item.href) && item.href !== '/') ||
-              (item.href === '/learner/assessments' && pathname.startsWith('/learner/quiz'));
+              (item.href === '/learner/assessments' && (pathname === '/learner/quiz' || pathname.startsWith('/learner/quiz/')));
 
             const content = (
               <Link
@@ -175,8 +177,8 @@ export function Sidebar({
                       item.badgeVariant === 'warning'
                         ? 'bg-warning text-white'
                         : item.badgeVariant === 'ai'
-                        ? 'bg-ai-purple text-white'
-                        : 'bg-teal text-white'
+                          ? 'bg-ai-purple text-white'
+                          : 'bg-teal text-white'
                     )}
                   >
                     {item.badge}

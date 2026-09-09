@@ -8,10 +8,12 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.course import Course
+from app.models.course_competency import CourseCompetency
 from app.models.course_prerequisite import CoursePrerequisite
 from app.models.learning_path import LearningPath
 from app.models.learning_path_item import LearningPathItem
 from app.models.user import User
+from app.models.user_competency import UserCompetency
 from app.schemas.learning_path import LearningPathGenerationResponse, LearningPathResponse
 from app.services.recommendation_service import recommendation_service
 from app.services.skill_gap_service import skill_gap_service
@@ -283,6 +285,113 @@ class LearningPathService:
             "completion_rate_percent": completion_rate,
         }
 
+    @classmethod
+    def add_course_to_learning_path(
+        cls,
+        db: Session,
+        user: User,
+        course_id: UUID,
+    ) -> LearningPathItem:
+        """Add a recommended course to the learner's active learning path.
+
+        Prevents duplicate entries and sets appropriate sequence order and gap priority.
+        SAFETY: This method NEVER alters UserCompetency.current_level.
+        """
+        course = (
+            db.query(Course)
+            .options(
+                joinedload(Course.course_competencies).joinedload(CourseCompetency.competency),
+            )
+            .filter(Course.id == course_id, Course.is_active == True)
+            .first()
+        )
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Course with ID '{course_id}' not found in active catalog.",
+            )
+
+        # 1. Get or create active learning path
+        active_path = (
+            db.query(LearningPath)
+            .options(
+                joinedload(LearningPath.items).joinedload(LearningPathItem.course)
+            )
+            .filter(LearningPath.user_id == user.id, LearningPath.status == "ACTIVE")
+            .first()
+        )
+
+        if not active_path:
+            role_title = user.role.name if user.role else (user.designation or "LEARNER")
+            active_path = LearningPath(
+                user_id=user.id,
+                title=f"Personalized Learning Path for {user.full_name}",
+                description=f"Individualized learning sequence for {role_title} professional development.",
+                target_role=role_title,
+                estimated_duration_hours=0.0,
+                status="ACTIVE",
+                generated_at=datetime.now(timezone.utc),
+            )
+            db.add(active_path)
+            db.flush()
+
+        # 2. Prevent duplicates in the active path
+        for item in active_path.items:
+            if item.course_id == course_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This course is already in your active learning path.",
+                )
+
+        # 3. Determine priority and reason from user competencies
+        user_comps = (
+            db.query(UserCompetency)
+            .options(joinedload(UserCompetency.competency))
+            .filter(UserCompetency.user_id == user.id)
+            .all()
+        )
+        user_comp_map = {uc.competency_id: uc for uc in user_comps}
+
+        matching_gaps = []
+        for cc in course.course_competencies:
+            if cc.competency_id in user_comp_map:
+                matching_gaps.append(user_comp_map[cc.competency_id])
+
+        priority = "MODERATE"
+        reason = f"Added by learner to personalized learning path."
+        if matching_gaps:
+            top_gap = max(matching_gaps, key=lambda g: g.gap if g.gap is not None else 0.0)
+            priority = top_gap.priority or "HIGH"
+            comp_name = top_gap.competency.name if top_gap.competency else "core"
+            reason = f"Targeted to address {priority.lower()} gap in {comp_name}."
+
+        seq_order = len(active_path.items) + 1
+
+        new_item = LearningPathItem(
+            learning_path_id=active_path.id,
+            course_id=course.id,
+            sequence_order=seq_order,
+            status="NOT_STARTED",
+            priority=priority,
+            reason=reason,
+            estimated_duration_hours=course.duration_hours,
+        )
+        db.add(new_item)
+        active_path.estimated_duration_hours = round(
+            (active_path.estimated_duration_hours or 0.0) + course.duration_hours, 1
+        )
+        db.commit()
+
+        # Reload the created item with course relation eagerly loaded
+        created_item = (
+            db.query(LearningPathItem)
+            .options(joinedload(LearningPathItem.course))
+            .filter(LearningPathItem.id == new_item.id)
+            .first()
+        )
+        return created_item
+
 
 learning_path_service = LearningPathService()
+
 

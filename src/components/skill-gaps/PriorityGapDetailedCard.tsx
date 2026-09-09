@@ -54,9 +54,8 @@ export function PriorityGapDetailedCard({ gap }: { gap: DetailedPriorityGap }) {
               Gap
             </span>
             <span
-              className={`text-sm font-bold font-mono ${
-                isCritical ? 'text-critical' : 'text-warning'
-              }`}
+              className={`text-sm font-bold font-mono ${isCritical ? 'text-critical' : 'text-warning'
+                }`}
             >
               -{gap.gap.toFixed(1)}
             </span>
@@ -71,9 +70,8 @@ export function PriorityGapDetailedCard({ gap }: { gap: DetailedPriorityGap }) {
               style={{ width: `${requiredPct}%` }}
             />
             <div
-              className={`h-full rounded-full ${
-                isCritical ? 'bg-critical' : 'bg-warning'
-              }`}
+              className={`h-full rounded-full ${isCritical ? 'bg-critical' : 'bg-warning'
+                }`}
               style={{ width: `${currentPct}%` }}
             />
           </div>

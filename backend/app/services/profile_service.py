@@ -1,6 +1,7 @@
 """Professional Profile and Employment Information Service."""
 
 import logging
+import uuid
 from typing import Optional, Union
 
 from fastapi import HTTPException, status
@@ -18,7 +19,29 @@ class ProfileService:
     """Business logic for user professional profile management."""
 
     @staticmethod
-    def create_profile(db: Session, user: User, profile_in: ProfileCreate) -> UserProfile:
+    def _parse_experience(exp_years_val: Optional[float], exp_alias: Optional[Union[float, str]]) -> float:
+        if exp_years_val is not None and exp_years_val > 0.0:
+            return float(exp_years_val)
+        if exp_alias is not None:
+            if isinstance(exp_alias, (int, float)):
+                return float(exp_alias)
+            if isinstance(exp_alias, str):
+                s = exp_alias.strip()
+                mapping = {
+                    "Fresher": 0.0,
+                    "0–1 years": 0.5,
+                    "0-1 years": 0.5,
+                    "1–3 years": 2.0,
+                    "1-3 years": 2.0,
+                    "3–5 years": 4.0,
+                    "3-5 years": 4.0,
+                    "5+ years": 6.0,
+                }
+                return mapping.get(s, 0.0)
+        return float(exp_years_val or 0.0)
+
+    @classmethod
+    def create_profile(cls, db: Session, user: User, profile_in: ProfileCreate) -> UserProfile:
         """Create the authenticated user's professional profile, preventing duplicates."""
         # 1. Prevent duplicate profile creation
         existing = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
@@ -28,7 +51,7 @@ class ProfileService:
                 detail="Profile already exists for this user. Use PUT /onboarding/profile/me to update your profile.",
             )
 
-        # 2. Validate department_id if provided
+        # 2. Validate department_id if provided or link/create from department name
         dept_id = None
         if profile_in.department_id is not None:
             dept = db.query(Department).filter(Department.id == profile_in.department_id).first()
@@ -38,13 +61,33 @@ class ProfileService:
                     detail=f"Department with ID '{profile_in.department_id}' not found.",
                 )
             dept_id = dept.id
+        elif profile_in.department and profile_in.department.strip():
+            dept_name = profile_in.department.strip()
+            dept = db.query(Department).filter(Department.name.ilike(dept_name)).first()
+            if not dept:
+                code = "".join([w[0] for w in dept_name.split() if w])[:8].upper() or "DEPT"
+                existing_code = db.query(Department).filter(Department.code == code).first()
+                if existing_code:
+                    code = f"{code[:5]}_{uuid.uuid4().hex[:2].upper()}"
+                dept = Department(name=dept_name, code=code, description=dept_name)
+                db.add(dept)
+                db.flush()
+            dept_id = dept.id
 
         # 3. Check required fields for profile completion:
-        # designation, employment_type, experience_years, education_level
         clean_designation = profile_in.designation.strip() if profile_in.designation else None
+        clean_job_role = profile_in.job_role.strip() if profile_in.job_role else None
+        clean_assignment = profile_in.current_assignment.strip() if profile_in.current_assignment else None
         clean_employment = profile_in.employment_type.strip() if profile_in.employment_type else "GOVERNMENT_OFFICER"
-        clean_education = profile_in.education_level.strip() if profile_in.education_level else "BACHELORS"
-        exp_years = profile_in.experience_years if profile_in.experience_years is not None else 0.0
+        clean_education = (profile_in.education or profile_in.education_level or "BACHELORS").strip()
+        exp_years = cls._parse_experience(profile_in.experience_years, profile_in.experience)
+        clean_work_area = (
+            profile_in.current_work_area.strip()
+            if profile_in.current_work_area
+            else (profile_in.department.strip() if profile_in.department else None)
+        )
+        clean_trainings = profile_in.previous_trainings.strip() if profile_in.previous_trainings else None
+        clean_goal = (profile_in.professional_goal or profile_in.career_goal or "").strip() or None
 
         is_completed = bool(
             clean_designation
@@ -63,11 +106,16 @@ class ProfileService:
             experience_years=exp_years,
             education_level=clean_education,
             specialization=profile_in.specialization.strip() if profile_in.specialization else None,
-            current_work_area=profile_in.current_work_area.strip() if profile_in.current_work_area else None,
+            current_work_area=clean_work_area,
+            job_role=clean_job_role,
+            current_assignment=clean_assignment,
+            previous_trainings=clean_trainings,
+            professional_goal=clean_goal,
             location=profile_in.location.strip() if profile_in.location else None,
             bio=profile_in.bio.strip() if profile_in.bio else None,
             profile_completed=is_completed,
             skills_completed=False,
+            competency_initialized=False,
             onboarding_completed=False,
             onboarding_step=onboarding_step,
         )
@@ -114,6 +162,7 @@ class ProfileService:
                 onboarding_step=1,
                 profile_completed=False,
                 skills_completed=False,
+                competency_initialized=False,
                 onboarding_completed=False,
             )
             db.add(profile)
@@ -147,6 +196,19 @@ class ProfileService:
                 )
             profile.department_id = dept.id
             user.department_id = dept.id
+        elif profile_in.department and profile_in.department.strip():
+            dept_name = profile_in.department.strip()
+            dept = db.query(Department).filter(Department.name.ilike(dept_name)).first()
+            if not dept:
+                code = "".join([w[0] for w in dept_name.split() if w])[:8].upper() or "DEPT"
+                existing_code = db.query(Department).filter(Department.code == code).first()
+                if existing_code:
+                    code = f"{code[:5]}_{uuid.uuid4().hex[:2].upper()}"
+                dept = Department(name=dept_name, code=code, description=dept_name)
+                db.add(dept)
+                db.flush()
+            profile.department_id = dept.id
+            user.department_id = dept.id
 
         # Update designation and synchronize onto User model for role matching
         if profile_in.designation is not None:
@@ -154,23 +216,40 @@ class ProfileService:
             profile.designation = clean_designation
             user.designation = clean_designation
 
+        # Update job role
+        if profile_in.job_role is not None:
+            profile.job_role = profile_in.job_role.strip() if profile_in.job_role else None
+
+        # Update current assignment
+        if profile_in.current_assignment is not None:
+            profile.current_assignment = profile_in.current_assignment.strip() if profile_in.current_assignment else None
+
         # Update experience
-        if profile_in.experience_years is not None:
-            profile.experience_years = profile_in.experience_years
-            user.experience_years = profile_in.experience_years
+        if profile_in.experience_years is not None or profile_in.experience is not None:
+            exp_val = cls._parse_experience(profile_in.experience_years, profile_in.experience)
+            profile.experience_years = exp_val
+            user.experience_years = exp_val
 
         # Update employment and education details
         if profile_in.employment_type is not None:
             profile.employment_type = profile_in.employment_type.strip()
 
-        if profile_in.education_level is not None:
-            profile.education_level = profile_in.education_level.strip()
+        if profile_in.education is not None or profile_in.education_level is not None:
+            edu_val = profile_in.education or profile_in.education_level
+            profile.education_level = edu_val.strip() if edu_val else "BACHELORS"
 
         if profile_in.specialization is not None:
             profile.specialization = profile_in.specialization.strip() if profile_in.specialization else None
 
         if profile_in.current_work_area is not None:
             profile.current_work_area = profile_in.current_work_area.strip() if profile_in.current_work_area else None
+
+        if profile_in.previous_trainings is not None:
+            profile.previous_trainings = profile_in.previous_trainings.strip() if profile_in.previous_trainings else None
+
+        if profile_in.professional_goal is not None or profile_in.career_goal is not None:
+            goal_val = profile_in.professional_goal or profile_in.career_goal
+            profile.professional_goal = goal_val.strip() if goal_val else None
 
         if profile_in.location is not None:
             profile.location = profile_in.location.strip() if profile_in.location else None
@@ -252,6 +331,18 @@ class ProfileService:
             onboarding_completed=onboarding_completed,
             next_action=next_action,
         )
+
+    @staticmethod
+    def complete_onboarding(db: Session, user: User) -> OnboardingStatusResponse:
+        """Mark the authenticated learner's onboarding as completed."""
+        profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
+        if profile:
+            profile.onboarding_completed = True
+            profile.onboarding_step = 5
+            db.commit()
+            db.refresh(profile)
+            logger.info(f"Marked onboarding completed for user {user.id}")
+        return ProfileService.get_onboarding_status(db, user)
 
 
 profile_service = ProfileService()

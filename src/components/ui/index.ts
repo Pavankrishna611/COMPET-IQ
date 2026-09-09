@@ -13,3 +13,5 @@ export * from './Toast';
 export * from './states/LoadingState';
 export * from './states/EmptyState';
 export * from './states/ErrorState';
+export * from './Carousel';
+

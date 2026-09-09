@@ -87,13 +87,12 @@ export function CompetencyDetailModal({
               Skill Gap
             </span>
             <span
-              className={`text-xl font-bold font-mono ${
-                competency.gap > 1.0
+              className={`text-xl font-bold font-mono ${competency.gap > 1.0
                   ? 'text-critical'
                   : competency.gap > 0
-                  ? 'text-warning'
-                  : 'text-success'
-              }`}
+                    ? 'text-warning'
+                    : 'text-success'
+                }`}
             >
               {competency.gap > 0 ? `-${competency.gap.toFixed(1)}` : '0.0'}
             </span>
@@ -187,8 +186,8 @@ export function CompetencyDetailModal({
                     item.status === 'Completed'
                       ? 'success'
                       : item.status === 'In Progress'
-                      ? 'info'
-                      : 'neutral'
+                        ? 'info'
+                        : 'neutral'
                   }
                   size="sm"
                 >

@@ -8,10 +8,11 @@ import { learnerProfileOverview } from '@/data/dashboard';
 import { useAuth } from '@/context/AuthContext';
 
 export function WelcomeHero() {
-  const { currentUser } = useAuth();
-  const name = currentUser?.name ? currentUser.name.split(' ')[0] : learnerProfileOverview.greetingName;
-  const designation = currentUser?.designation || learnerProfileOverview.role;
-  const department = currentUser?.department || learnerProfileOverview.department;
+  const { currentUser, user } = useAuth();
+  const activeUser = currentUser || user;
+  const name = activeUser?.name ? activeUser.name.split(' ')[0] : learnerProfileOverview.greetingName;
+  const designation = activeUser?.designation || learnerProfileOverview.role;
+  const department = activeUser?.department || learnerProfileOverview.department;
 
   return (
     <div className="flex flex-col lg:flex-row items-stretch gap-4">
