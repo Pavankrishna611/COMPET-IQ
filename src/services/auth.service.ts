@@ -37,6 +37,31 @@ class AuthService {
   }
 
   /**
+   * Request a 6-digit verification code sent to Gmail for password reset.
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string; email?: string; code_preview?: string }> {
+    return apiClient.post('/auth/forgot-password/request', { email }, { skipAuth: true });
+  }
+
+  /**
+   * Verify the 6-digit verification code received via email.
+   */
+  async verifyResetCode(email: string, code: string): Promise<{ message: string; email?: string; reset_token?: string }> {
+    return apiClient.post('/auth/forgot-password/verify', { email, code }, { skipAuth: true });
+  }
+
+  /**
+   * Submit new password creation after verifying reset code.
+   */
+  async resetPassword(email: string, resetToken: string, newPassword: string): Promise<{ message: string }> {
+    return apiClient.post('/auth/forgot-password/reset', {
+      email,
+      reset_token: resetToken,
+      new_password: newPassword,
+    }, { skipAuth: true });
+  }
+
+  /**
    * Check backend service health.
    */
   async checkHealth(): Promise<{ status: string; version?: string }> {

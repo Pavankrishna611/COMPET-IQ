@@ -1,5 +1,6 @@
 """Authentication and user access endpoints."""
 
+from typing import Dict
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -8,7 +9,15 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from app.database.session import get_db
 from app.models.user import User
-from app.schemas.auth import TokenResponse, TokenUser, UserLogin, UserRegister
+from app.schemas.auth import (
+    ForgotPasswordRequest,
+    ForgotPasswordVerify,
+    ResetPasswordRequest,
+    TokenResponse,
+    TokenUser,
+    UserLogin,
+    UserRegister,
+)
 from app.schemas.common import MessageResponse
 from app.schemas.user import UserResponse
 from app.services.auth_service import auth_service
@@ -70,6 +79,52 @@ def login(login_in: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
 def get_me(current_user: User = Depends(get_current_user)) -> User:
     """Return currently authenticated user profile."""
     return current_user
+
+
+@router.post(
+    "/forgot-password/request",
+    status_code=status.HTTP_200_OK,
+    summary="Request Password Reset Code",
+    description="Generates a 6-digit verification code for password reset and sends it to the user's Gmail.",
+)
+def request_password_reset(
+    req: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    """Request a 6-digit password reset verification code."""
+    return auth_service.request_password_reset(db=db, email_or_id=req.email)
+
+
+@router.post(
+    "/forgot-password/verify",
+    status_code=status.HTTP_200_OK,
+    summary="Verify Password Reset Code",
+    description="Validates the 6-digit verification code and returns a single-use password reset token.",
+)
+def verify_password_reset_code(
+    req: ForgotPasswordVerify,
+) -> Dict[str, str]:
+    """Verify 6-digit verification code."""
+    return auth_service.verify_reset_code(email_or_id=req.email, code=req.code)
+
+
+@router.post(
+    "/forgot-password/reset",
+    status_code=status.HTTP_200_OK,
+    summary="Reset Account Password",
+    description="Updates account password after code verification.",
+)
+def reset_password(
+    req: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+) -> Dict[str, str]:
+    """Set new password using verified reset token."""
+    return auth_service.reset_password(
+        db=db,
+        email=req.email,
+        reset_token=req.reset_token,
+        new_password=req.new_password,
+    )
 
 
 @router.get(
