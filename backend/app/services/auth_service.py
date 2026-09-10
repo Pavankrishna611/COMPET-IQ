@@ -270,10 +270,11 @@ class AuthService:
         resp = {
             "message": f"Verification code successfully sent to {user.email}",
             "email": user.email,
-            "code_preview": code,
         }
         if email_sent:
             resp["email_sent"] = True
+        else:
+            resp["code_preview"] = code
         return resp
 
     @staticmethod
