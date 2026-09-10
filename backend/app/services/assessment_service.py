@@ -16,6 +16,7 @@ from app.models.assessment import Assessment
 from app.models.assessment_assignment import AssessmentAssignment
 from app.models.assessment_attempt import AssessmentAttempt
 from app.models.competency import Competency
+from app.models.notification import Notification
 from app.models.question import Question
 from app.models.role import Role
 from app.models.user import User
@@ -536,6 +537,20 @@ class AssessmentService:
             )
             db.add(new_assign)
             new_assignments.append(new_assign)
+
+            # Create persistent notification for assigned learner
+            learner_notif = Notification(
+                user_id=lid,
+                title="New Assessment Available",
+                message=f'"{assessment.title}" has been assigned to you by your trainer.',
+                type="assessment",
+                target_role="LEARNER",
+                action_url=f"/learner/quiz?assessment_id={assessment.id}",
+                reference_id=str(assessment.id),
+                is_read=False,
+            )
+            db.add(learner_notif)
+
             assigned_count += 1
             assigned_user_ids.add(lid)
 

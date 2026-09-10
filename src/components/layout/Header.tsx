@@ -9,13 +9,14 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown';
 import { getNotificationsForRole, RoleNotification } from '@/data/notifications';
+import { notificationService } from '@/services/notification.service';
+import { GlobalSearchBar } from './GlobalSearchBar';
 import {
   Search,
   Bell,
   Menu,
   ChevronDown,
   User as UserIcon,
-  Settings,
   LogOut,
   Sparkles,
   CheckCircle2,
@@ -37,6 +38,34 @@ export interface HeaderProps {
   className?: string;
 }
 
+interface DisplayNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  type: string;
+  actionUrl?: string;
+}
+
+function formatNotificationTime(dateStr?: string): string {
+  if (!dateStr) return 'Just now';
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  } catch {
+    return 'Recently';
+  }
+}
+
 export function Header({
   title = 'Intelligence Dashboard',
   breadcrumbs,
@@ -48,40 +77,81 @@ export function Header({
   const { role, currentUser: authUser, logout } = useAuth();
   const activeUser = propUser || authUser || {
     id: 'guest',
-    name: 'Arjun Kumar',
-    email: 'arjun.kumar@mospi.gov.in',
-    designation: 'Statistical Investigator',
-    department: 'Survey Design and Research Division',
-    cadre: 'SSS',
+    name: 'Officer',
+    email: '',
+    designation: 'Officer',
+    department: 'Ministry of Statistics & Programme Implementation',
+    cadre: 'Official',
     role: 'learner',
-    employeeId: 'SSS-2021-0892',
-    joinedDate: '2021-07-15',
+    employeeId: '',
+    joinedDate: '',
+    avatarUrl: undefined,
   };
 
   const currentRole = role || activeUser.role;
 
   // Local state for notifications and marking as read
-  const [notifications, setNotifications] = useState<RoleNotification[]>(() =>
-    getNotificationsForRole(currentRole)
-  );
+  const [notifications, setNotifications] = useState<DisplayNotification[]>([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [settingsNotice, setSettingsNotice] = useState<string | null>(null);
 
-  // Sync notifications when role changes
+  const fetchRealNotifications = React.useCallback(async () => {
+    try {
+      const data = await notificationService.getNotifications(30);
+      if (data && data.items) {
+        setNotifications(
+          data.items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            message: item.message,
+            timestamp: formatNotificationTime(item.created_at),
+            read: item.is_read,
+            type: item.type,
+            actionUrl:
+              item.action_url ||
+              (item.reference_id ? `/learner/quiz?assessment_id=${item.reference_id}` : '/learner/assessments'),
+          }))
+        );
+      }
+    } catch {
+      // Fallback to empty notifications if offline or no server connection
+      setNotifications([]);
+    }
+  }, []);
+
+  // Sync notifications on mount, role change, and periodic poll
   React.useEffect(() => {
-    setNotifications(getNotificationsForRole(currentRole));
-  }, [currentRole]);
+    fetchRealNotifications();
+    const interval = setInterval(fetchRealNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchRealNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAsRead = (notifId: string) => {
+  const handleNotificationClick = async (notif: DisplayNotification) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
     );
+
+    try {
+      await notificationService.markAsRead(notif.id);
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+
+    if (notif.actionUrl) {
+      setIsNotificationOpen(false);
+      router.push(notif.actionUrl);
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+    try {
+      await notificationService.markAllAsRead();
+    } catch (err) {
+      console.error('Failed to mark all notifications as read:', err);
+    }
   };
 
   const profileMenuItems: DropdownItem[] = [
@@ -100,15 +170,6 @@ export function Header({
         } else {
           router.push(`/${currentRole}/dashboard`);
         }
-      },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: <Settings className="w-4 h-4" />,
-      onClick: () => {
-        setSettingsNotice('Settings coming soon');
-        setTimeout(() => setSettingsNotice(null), 3000);
       },
     },
     {
@@ -132,13 +193,6 @@ export function Header({
         className
       )}
     >
-      {/* Settings Toast Notice */}
-      {settingsNotice && (
-        <div className="absolute top-18 right-6 z-50 bg-navy text-white text-xs font-medium px-4 py-2 rounded-btn shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
-          {settingsNotice}
-        </div>
-      )}
-
       {/* Left Area: Mobile Menu Toggle & Title / Breadcrumbs */}
       <div className="flex items-center gap-3">
         <button
@@ -173,23 +227,10 @@ export function Header({
         </div>
       </div>
 
-      {/* Right Area: Demo Badge, Search, Notifications, User Identity */}
+      {/* Right Area: Search, Notifications, User Identity */}
       <div className="flex items-center gap-2 sm:gap-3.5">
-        {/* Demo Mode Indicator Badge */}
-        <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-light text-teal border border-teal/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-teal shrink-0 animate-pulse" />
-          Demo Mode
-        </span>
-
-        {/* Compact Search Input */}
-        <div className="hidden lg:flex items-center relative w-56">
-          <Search className="w-3.5 h-3.5 text-text-muted absolute left-3 pointer-events-none" />
-          <input
-            type="search"
-            placeholder="Search competencies..."
-            className="w-full h-8 pl-8 pr-3 text-xs bg-[#F5F8FC] border border-border rounded-btn text-text-primary placeholder:text-text-muted/80 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/15 transition-all"
-          />
-        </div>
+        {/* Global Search Input with Autocomplete & Dropdown */}
+        <GlobalSearchBar className="hidden md:flex" />
 
         {/* Notification Bell with Custom Interactive Dropdown */}
         <div className="relative">
@@ -238,7 +279,7 @@ export function Header({
                   notifications.map((notif) => (
                     <div
                       key={notif.id}
-                      onClick={() => markAsRead(notif.id)}
+                      onClick={() => handleNotificationClick(notif)}
                       className={cn(
                         'p-3.5 flex items-start gap-3 transition-colors cursor-pointer hover:bg-[#F5F8FC]',
                         !notif.read && 'bg-primary-light/30'

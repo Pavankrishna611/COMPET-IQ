@@ -68,7 +68,7 @@ export default function LearnerDashboardPage() {
           skillGapService.getMySkillGaps().catch(() => null),
           learningPathService.getMyActiveLearningPath().catch(() => null),
           recommendationService.getMyRecommendations(3).catch(() => []),
-          watchTimeService.getUserWatchTime(userId, isDemo),
+          watchTimeService.getUserWatchTime(userId),
         ]);
 
         if (!isMounted) return;

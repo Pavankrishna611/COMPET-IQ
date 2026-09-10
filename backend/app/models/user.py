@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.generated_question import GeneratedQuestion
     from app.models.learning_material import LearningMaterial
     from app.models.learning_path import LearningPath
+    from app.models.notification import Notification
     from app.models.role import Role
     from app.models.user_competency import UserCompetency
     from app.models.user_interested_course import UserInterestedCourse
@@ -143,6 +144,11 @@ class User(BaseModel):
     )
     interested_courses: Mapped[List["UserInterestedCourse"]] = relationship(
         "UserInterestedCourse",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    notifications: Mapped[List["Notification"]] = relationship(
+        "Notification",
         back_populates="user",
         cascade="all, delete-orphan",
     )

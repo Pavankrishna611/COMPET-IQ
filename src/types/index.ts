@@ -73,6 +73,7 @@ export interface Course {
   description?: string;
   thumbnailUrl?: string;
   enrolledCount?: number;
+  url?: string;
 }
 
 export interface LearningPathItem {

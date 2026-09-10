@@ -91,6 +91,14 @@ class ApiClient {
           // If response body is non-JSON
         }
 
+        if (response.status === 400) {
+          throw new ApiError(
+            errorMessage || 'Invalid request parameters. Please verify your input.',
+            400,
+            errorDetail
+          );
+        }
+
         if (response.status === 401) {
           // Invalidate session on unauthorized
           authStorage.clearAuth();
@@ -124,10 +132,11 @@ class ApiClient {
         }
 
         if (response.status >= 500) {
+          const isGatewayError = response.status === 502 || response.status === 503 || response.status === 504;
           throw new ApiError(
-            response.status === 503
+            isGatewayError
               ? 'The COMPETIQ service is temporarily unavailable. Please retry in a few moments.'
-              : 'An unexpected internal server error occurred.',
+              : (errorMessage || 'An unexpected internal server error occurred.'),
             response.status,
             errorDetail
           );

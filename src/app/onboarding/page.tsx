@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
+import { Logo } from '@/components/common';
 import { useAuth } from '@/context/AuthContext';
 import { onboardingService } from '@/services/onboarding.service';
 import {
@@ -224,9 +225,9 @@ export default function OnboardingPage() {
       console.error('Failed to save professional profile:', err);
       setSubmitError(
         err.detail?.message ||
-          err.detail ||
-          err.message ||
-          'Failed to save your professional profile. Please check your inputs and try again.'
+        err.detail ||
+        err.message ||
+        'Failed to save your professional profile. Please check your inputs and try again.'
       );
       setIsSubmitting(false);
     }
@@ -248,17 +249,12 @@ export default function OnboardingPage() {
       {/* Top Header */}
       <header className="h-16 border-b border-border bg-surface px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-btn bg-teal flex items-center justify-center font-bold text-white text-sm shadow-sm">
-            CQ
+          <div className="bg-navy px-2.5 py-1 rounded-xl shadow-xs flex items-center">
+            <Logo size="sm" className="h-7 w-auto" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-wider text-text-primary leading-none">
-              COMPET<span className="text-teal">IQ</span>
-            </span>
-            <span className="text-[10px] text-text-muted tracking-tight uppercase font-medium mt-0.5">
-              Professional Onboarding
-            </span>
-          </div>
+          <span className="text-[11px] text-text-muted tracking-tight uppercase font-medium border-l border-border pl-3">
+            Professional Onboarding
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -375,11 +371,10 @@ export default function OnboardingPage() {
                     onChange={(e) => setCurrentAssignment(e.target.value)}
                     onBlur={() => handleBlur('currentAssignment')}
                     placeholder="e.g. Responsible for collecting, cleaning and analysing economic survey data."
-                    className={`w-full p-3 text-sm text-text-primary bg-surface border rounded-btn transition-colors placeholder:text-text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/15 ${
-                      errors.currentAssignment
+                    className={`w-full p-3 text-sm text-text-primary bg-surface border rounded-btn transition-colors placeholder:text-text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/15 ${errors.currentAssignment
                         ? 'border-critical focus:border-critical focus:ring-critical/15'
                         : 'border-border focus:border-primary'
-                    }`}
+                      }`}
                     required
                   />
                   {errors.currentAssignment ? (
@@ -469,11 +464,10 @@ export default function OnboardingPage() {
                     onChange={(e) => setCareerGoal(e.target.value)}
                     onBlur={() => handleBlur('careerGoal')}
                     placeholder="e.g. I want to improve my statistical data analysis skills and become proficient in Python."
-                    className={`w-full p-3 text-sm text-text-primary bg-surface border rounded-btn transition-colors placeholder:text-text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/15 ${
-                      errors.careerGoal
+                    className={`w-full p-3 text-sm text-text-primary bg-surface border rounded-btn transition-colors placeholder:text-text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/15 ${errors.careerGoal
                         ? 'border-critical focus:border-critical focus:ring-critical/15'
                         : 'border-border focus:border-primary'
-                    }`}
+                      }`}
                     required
                   />
                   {errors.careerGoal ? (

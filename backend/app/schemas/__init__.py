@@ -74,11 +74,26 @@ from app.schemas.user import (
     UserResponse,
 )
 
+from app.schemas.search import (
+    SearchResponse,
+    SearchResultItem,
+)
+from app.schemas.notification import (
+    NotificationBase,
+    NotificationCreate,
+    NotificationResponse,
+    NotificationSummaryResponse,
+)
+
 __all__ = [
     "MessageResponse",
     "HealthResponse",
     "ErrorDetail",
     "ErrorResponse",
+    "NotificationBase",
+    "NotificationCreate",
+    "NotificationResponse",
+    "NotificationSummaryResponse",
     "UserRegister",
     "UserLogin",
     "TokenUser",
@@ -132,4 +147,6 @@ __all__ = [
     "LearningPathItemUpdate",
     "LearningPathResponse",
     "LearningPathGenerationResponse",
+    "SearchResultItem",
+    "SearchResponse",
 ]

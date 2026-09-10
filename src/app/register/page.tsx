@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Input, Button, Badge } from '@/components/ui';
+import { Logo } from '@/components/common';
 import { authService } from '@/services/auth.service';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -272,18 +273,8 @@ export default function RegisterPage() {
 
         {/* Top Wordmark & Identity */}
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-btn bg-teal flex items-center justify-center font-bold text-white text-base shadow-sm">
-              CQ
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-wider text-white leading-none">
-                COMPET<span className="text-teal">IQ</span>
-              </span>
-              <span className="text-[11px] text-[#A5C2DE] tracking-tight uppercase font-medium mt-1">
-                India&apos;s Official Statistical System
-              </span>
-            </div>
+          <div className="mb-6">
+            <Logo size="lg" className="h-11 w-auto" />
           </div>
 
           <Badge variant="teal" size="sm" withDot className="mb-4">

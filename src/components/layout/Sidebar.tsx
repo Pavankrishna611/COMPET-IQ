@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Role } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { getNavigationForRole } from '@/data/navigation';
+import { Logo } from '@/components/common';
 import { Tooltip } from '@/components/ui/Tooltip';
 import {
   LayoutDashboard,
@@ -23,7 +24,6 @@ import {
   BrainCircuit,
   FileSpreadsheet,
   Database,
-  Settings,
   LogOut,
   User,
   ChevronLeft,
@@ -46,7 +46,6 @@ const iconMap: Record<string, LucideIcon> = {
   BrainCircuit,
   FileSpreadsheet,
   Database,
-  Settings,
   LogOut,
   User,
 };
@@ -86,23 +85,13 @@ export function Sidebar({
           )}
         >
           {!isCollapsed ? (
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-btn bg-teal flex items-center justify-center font-bold text-white tracking-wider text-sm shadow-sm">
-                CQ
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold tracking-wider text-base text-white leading-none">
-                  COMPET<span className="text-teal">IQ</span>
-                </span>
-                <span className="text-[10px] text-[#A5C2DE] tracking-tight uppercase font-medium mt-0.5">
-                  Skill Intelligence Platform
-                </span>
-              </div>
-            </div>
+            <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+              <Logo size="md" className="h-9 w-auto" />
+            </Link>
           ) : (
-            <div className="w-9 h-9 rounded-btn bg-teal flex items-center justify-center font-bold text-white text-sm shadow-sm">
-              CQ
-            </div>
+            <Link href="/" className="flex items-center justify-center hover:opacity-90 transition-opacity">
+              <Logo collapsed={true} className="h-8 w-8 object-contain" />
+            </Link>
           )}
 
           <button
@@ -200,23 +189,12 @@ export function Sidebar({
         </nav>
       </div>
 
-      {/* Bottom Profile, Settings, and Logout Navigation */}
+      {/* Bottom Sign Out Navigation */}
       <div className="p-3 border-t border-white/10 flex flex-col gap-1">
-        <button
-          onClick={() => alert('Settings coming soon')}
-          className={cn(
-            'group flex items-center gap-3 px-3 py-2 rounded-btn text-xs font-medium text-[#A5C2DE] hover:text-white hover:bg-white/10 transition-colors w-full text-left',
-            isCollapsed && 'justify-center px-2'
-          )}
-        >
-          <Settings className="w-4 h-4 shrink-0 text-[#8EB2D5] group-hover:text-white" />
-          {!isCollapsed && <span className="truncate">Settings</span>}
-        </button>
-
         <button
           onClick={logout}
           className={cn(
-            'group flex items-center gap-3 px-3 py-2 rounded-btn text-xs font-medium text-critical-light hover:text-white hover:bg-critical/30 transition-colors w-full text-left',
+            'group flex items-center gap-3 px-3 py-2.5 rounded-btn text-xs font-medium text-critical-light hover:text-white hover:bg-critical/30 transition-colors w-full text-left',
             isCollapsed && 'justify-center px-2'
           )}
         >

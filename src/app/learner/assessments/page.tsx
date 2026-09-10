@@ -26,16 +26,20 @@ import {
   RefreshCw,
   ShieldCheck,
   BookOpen,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { assessmentService, quizService } from '@/services';
 import type { AssessmentResponse, UserAttemptHistoryItem } from '@/types/api';
 
 export default function LearnerAssessmentsPage() {
+  const { isDemoMode } = useAuth();
   const [activeTab, setActiveTab] = useState<AssessmentTabKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompetency, setSelectedCompetency] = useState('all');
-  const [assessmentsList, setAssessmentsList] = useState<DetailedAssessmentItem[]>(mockLearnerAssessments);
+  const [assessmentsList, setAssessmentsList] = useState<DetailedAssessmentItem[]>(() =>
+    isDemoMode ? mockLearnerAssessments : []
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export default function LearnerAssessmentsPage() {
           quizService.getMyAttempts(),
         ]);
 
-        if (assessmentsRes.status === 'fulfilled' && assessmentsRes.value && assessmentsRes.value.length > 0) {
+        if (assessmentsRes.status === 'fulfilled' && assessmentsRes.value) {
           const apiAssessments = assessmentsRes.value;
           const attempts = attemptsRes.status === 'fulfilled' ? attemptsRes.value || [] : [];
 
@@ -91,22 +95,29 @@ export default function LearnerAssessmentsPage() {
             };
           });
 
-          // Merge with mock to preserve variety while giving preference to backend items
-          const apiTitles = new Set(mapped.map((m) => m.title.toLowerCase()));
-          const remainingMock = mockLearnerAssessments.filter(
-            (m) => !apiTitles.has(m.title.toLowerCase())
-          );
-          setAssessmentsList([...mapped, ...remainingMock]);
+          if (!isDemoMode) {
+            setAssessmentsList(mapped);
+          } else {
+            // Merge with mock in demo mode
+            const apiTitles = new Set(mapped.map((m) => m.title.toLowerCase()));
+            const remainingMock = mockLearnerAssessments.filter(
+              (m) => !apiTitles.has(m.title.toLowerCase())
+            );
+            setAssessmentsList([...mapped, ...remainingMock]);
+          }
         }
       } catch (err) {
         console.warn('Using fallback assessments:', err);
+        if (isDemoMode) {
+          setAssessmentsList(mockLearnerAssessments);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchAssessments();
-  }, []);
+  }, [isDemoMode]);
 
   // Competency options
   const competencies = useMemo(() => {

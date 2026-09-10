@@ -93,10 +93,10 @@ export function CompetencyCard({ competency, onViewDetails }: CompetencyCardProp
             </span>
             <span
               className={`text-sm font-bold font-mono ${competency.gap > 1.0
-                  ? 'text-critical'
-                  : competency.gap > 0
-                    ? 'text-warning'
-                    : 'text-success'
+                ? 'text-critical'
+                : competency.gap > 0
+                  ? 'text-warning'
+                  : 'text-success'
                 }`}
             >
               {competency.gap > 0 ? `-${competency.gap.toFixed(1)}` : 'Met'}
@@ -122,10 +122,10 @@ export function CompetencyCard({ competency, onViewDetails }: CompetencyCardProp
             />
             <div
               className={`h-full rounded-full transition-all duration-300 ${competency.gap > 1.0
-                  ? 'bg-critical'
-                  : competency.gap > 0
-                    ? 'bg-warning'
-                    : 'bg-success'
+                ? 'bg-critical'
+                : competency.gap > 0
+                  ? 'bg-warning'
+                  : 'bg-success'
                 }`}
               style={{ width: `${currentPct}%` }}
               title={`Current Level: ${competency.currentLevel}`}

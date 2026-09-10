@@ -80,6 +80,7 @@ export const authStorage = {
       localStorage.removeItem(APP_CONFIG.tokenStorageKey);
       localStorage.removeItem(APP_CONFIG.roleStorageKey);
       localStorage.removeItem(APP_CONFIG.userStorageKey);
+      localStorage.removeItem(APP_CONFIG.demoModeStorageKey);
     } catch {}
   },
 };

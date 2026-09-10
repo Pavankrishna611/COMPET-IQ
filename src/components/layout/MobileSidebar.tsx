@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Role } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { getNavigationForRole } from '@/data/navigation';
+import { Logo } from '@/components/common';
 import {
   LayoutDashboard,
   Target,
@@ -21,7 +22,6 @@ import {
   BrainCircuit,
   FileSpreadsheet,
   Database,
-  Settings,
   LogOut,
   User,
   X,
@@ -42,7 +42,6 @@ const iconMap: Record<string, LucideIcon> = {
   BrainCircuit,
   FileSpreadsheet,
   Database,
-  Settings,
   LogOut,
   User,
 };
@@ -91,19 +90,9 @@ export function MobileSidebar({ isOpen, onClose, role: propRole }: MobileSidebar
         {/* Top Branding & Close Button */}
         <div>
           <div className="h-16 flex items-center justify-between border-b border-white/10 px-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-btn bg-teal flex items-center justify-center font-bold text-white tracking-wider text-sm shadow-sm">
-                CQ
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold tracking-wider text-base text-white leading-none">
-                  COMPET<span className="text-teal">IQ</span>
-                </span>
-                <span className="text-[10px] text-[#A5C2DE] tracking-tight uppercase font-medium mt-0.5">
-                  Skill Intelligence Platform
-                </span>
-              </div>
-            </div>
+            <Link href="/" onClick={onClose} className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+              <Logo size="md" className="h-9 w-auto" />
+            </Link>
 
             <button
               onClick={onClose}
@@ -165,25 +154,14 @@ export function MobileSidebar({ isOpen, onClose, role: propRole }: MobileSidebar
           </nav>
         </div>
 
-        {/* Bottom Settings & Logout */}
+        {/* Bottom Sign Out */}
         <div className="p-4 border-t border-white/10 flex flex-col gap-1">
-          <button
-            onClick={() => {
-              onClose();
-              alert('Settings coming soon');
-            }}
-            className="flex items-center gap-3 px-3.5 py-2 rounded-btn text-xs font-medium text-[#A5C2DE] hover:text-white hover:bg-white/10 transition-colors w-full text-left"
-          >
-            <Settings className="w-4 h-4 shrink-0 text-[#8EB2D5]" />
-            <span className="truncate">Settings</span>
-          </button>
-
           <button
             onClick={() => {
               onClose();
               logout();
             }}
-            className="flex items-center gap-3 px-3.5 py-2 rounded-btn text-xs font-medium text-critical-light hover:text-white hover:bg-critical/30 transition-colors w-full text-left"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-btn text-xs font-medium text-critical-light hover:text-white hover:bg-critical/30 transition-colors w-full text-left"
           >
             <LogOut className="w-4 h-4 shrink-0 text-critical-light" />
             <span className="truncate">Sign Out</span>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Logo } from '@/components/common';
 import { useAuth } from '@/context/AuthContext';
 import { onboardingService } from '@/services/onboarding.service';
 import {
@@ -122,17 +123,12 @@ export default function CompetencyAnalysisPage() {
       {/* Header */}
       <header className="h-16 border-b border-border bg-surface px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-btn bg-teal flex items-center justify-center font-bold text-white text-sm shadow-sm">
-            CQ
+          <div className="bg-navy px-2.5 py-1 rounded-xl shadow-xs flex items-center">
+            <Logo size="sm" className="h-7 w-auto" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-wider text-text-primary leading-none">
-              COMPET<span className="text-teal">IQ</span>
-            </span>
-            <span className="text-[10px] text-text-muted tracking-tight uppercase font-medium mt-0.5">
-              Official Statistics Competency Framework
-            </span>
-          </div>
+          <span className="text-[11px] text-text-muted tracking-tight uppercase font-medium border-l border-border pl-3">
+            Official Statistics Competency Framework
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -370,11 +366,10 @@ export default function CompetencyAnalysisPage() {
                   return (
                     <Card
                       key={item.competency_id}
-                      className={`border transition-all duration-200 overflow-hidden ${
-                        isExpanded
+                      className={`border transition-all duration-200 overflow-hidden ${isExpanded
                           ? 'border-teal shadow-md ring-1 ring-teal/20'
                           : 'border-border/90 hover:border-teal/30 hover:shadow-xs'
-                      }`}
+                        }`}
                     >
                       {/* Main Card Summary Row */}
                       <div
@@ -429,9 +424,8 @@ export default function CompetencyAnalysisPage() {
                               Gap
                             </span>
                             <span
-                              className={`text-sm font-bold mt-0.5 block ${
-                                item.gap === 0 ? 'text-emerald-600' : 'text-text-primary'
-                              }`}
+                              className={`text-sm font-bold mt-0.5 block ${item.gap === 0 ? 'text-emerald-600' : 'text-text-primary'
+                                }`}
                             >
                               {item.gap === 0 ? '0.0 (Met)' : item.gap.toFixed(1)}
                             </span>

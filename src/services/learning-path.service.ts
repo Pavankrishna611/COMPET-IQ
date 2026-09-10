@@ -41,6 +41,13 @@ class LearningPathService {
   ): Promise<LearningPathItemResponse> {
     return apiClient.patch<LearningPathItemResponse>(`/learning-paths/items/${itemId}`, { status });
   }
+
+  /**
+   * Add a course to the learner's active learning path.
+   */
+  async addCourseToLearningPath(courseId: string): Promise<LearningPathItemResponse> {
+    return apiClient.post<LearningPathItemResponse>(`/learning-paths/add-course/${courseId}`);
+  }
 }
 
 export const learningPathService = new LearningPathService();

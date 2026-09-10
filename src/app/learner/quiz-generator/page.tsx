@@ -10,6 +10,7 @@ import { aiAssessmentService } from '@/services/ai-assessment.service';
 import type {
   LearningMaterialResponse,
   GeneratedQuestionsResponse,
+  GeneratedQuestionResponse,
   PracticeQuizResultResponse,
   PracticeQuizSubmitRequest,
   PracticeFeedbackResponse,
@@ -275,7 +276,15 @@ export default function LearnerQuizGeneratorPage() {
         number_of_questions: questionCount,
         difficulty: difficulty,
       });
-      setGeneratedQuiz(result);
+      // Sanitize questions: withhold correct_option and explanation client-side during pre-quiz and taking states
+      const sanitizedQuiz: GeneratedQuestionsResponse = {
+        ...result,
+        questions: (result.questions || []).map((q) => {
+          const { correct_option, explanation, ...safeQ } = q;
+          return safeQ as GeneratedQuestionResponse;
+        }),
+      };
+      setGeneratedQuiz(sanitizedQuiz);
       setQuizViewMode('PREVIEW');
       setSelectedAnswers({});
       setQuizResult(null);
@@ -869,7 +878,7 @@ export default function LearnerQuizGeneratorPage() {
                             AI Psychometric Generator Active
                           </h5>
                           <p className="text-[11px] text-text-muted mt-0.5">
-                            Formulating {questionCount} validated MCQs strictly derived from "{uploadedMaterial.title}"...
+                            Formulating {questionCount} validated MCQs strictly derived from &quot;{uploadedMaterial.title}&quot;...
                           </p>
                         </div>
                       </div>
@@ -944,30 +953,32 @@ export default function LearnerQuizGeneratorPage() {
                 {/* MODE 1: PREVIEW MODE (Default after generation)       */}
                 {/* ---------------------------------------------------- */}
                 {quizViewMode === 'PREVIEW' && (
-                  <>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-surface border border-border shadow-card">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <Card className="p-6 sm:p-8 bg-surface border-border shadow-card space-y-6">
+                    {/* Header with Badges & Action */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
                           <Badge variant="ai" size="sm" className="gap-1 font-bold">
                             <Sparkles className="w-3 h-3" />
-                            Generated MCQs
+                            Quiz Ready
                           </Badge>
                           <Badge variant="neutral" size="sm">
                             Mode: {generatedQuiz.generation_mode}
                           </Badge>
-                          <span className="text-[11px] text-text-muted font-medium">
-                            {displayQuestions.length} Questions Generated
-                          </span>
+                          <Badge variant="success" size="sm" withDot>
+                            Validated
+                          </Badge>
                         </div>
-                        <h3 className="text-base font-bold text-text-primary">
-                          Practice Questions: {uploadedMaterial?.title}
+                        <h3 className="text-lg sm:text-xl font-extrabold text-text-primary">
+                          Quiz Preview: {uploadedMaterial?.title}
                         </h3>
-                        <p className="text-xs text-text-muted mt-0.5">
-                          Review the generated questions below or start an interactive self-assessment quiz.
+                        <p className="text-xs sm:text-sm text-text-secondary">
+                          Your AI-generated practice quiz is prepared and ready. Test your knowledge below with server-evaluated feedback.
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-wrap shrink-0">
+                      {/* Top Action / Regenerate */}
+                      <div className="flex items-center gap-2 shrink-0">
                         <Button
                           type="button"
                           variant="secondary"
@@ -978,17 +989,6 @@ export default function LearnerQuizGeneratorPage() {
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
                           <span>Regenerate</span>
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={handleStartQuiz}
-                          disabled={isGenerating}
-                          className="gap-1.5 text-xs font-bold shadow-xs"
-                        >
-                          <PlayCircle className="w-4 h-4" />
-                          <span>Start Practice Quiz</span>
                         </Button>
                       </div>
                     </div>
@@ -1004,168 +1004,100 @@ export default function LearnerQuizGeneratorPage() {
                       </div>
                     )}
 
-                    {/* Question Cards Preview List */}
-                    <div className="space-y-4">
-                      {displayQuestions.map((q, qIndex) => {
-                        const optionsList = [
-                          { key: 'A', text: q.option_a || (q.options && q.options[0]) || '' },
-                          { key: 'B', text: q.option_b || (q.options && q.options[1]) || '' },
-                          { key: 'C', text: q.option_c || (q.options && q.options[2]) || '' },
-                          { key: 'D', text: q.option_d || (q.options && q.options[3]) || '' },
-                        ];
+                    {/* Quiz Metadata & Summary Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* Material Name */}
+                      <div className="p-4 rounded-xl bg-surface-elevated/60 border border-border space-y-1">
+                        <div className="flex items-center gap-2 text-text-muted text-xs font-medium">
+                          <FileText className="w-4 h-4 text-primary" />
+                          <span>Learning Material</span>
+                        </div>
+                        <p className="text-sm font-bold text-text-primary truncate" title={uploadedMaterial?.title}>
+                          {uploadedMaterial?.title || 'Selected Material'}
+                        </p>
+                        <span className="text-[11px] text-text-muted block">Source document verified</span>
+                      </div>
 
-                        const correctKey = (q.correct_option || '').trim().toUpperCase();
+                      {/* Number of Questions */}
+                      <div className="p-4 rounded-xl bg-surface-elevated/60 border border-border space-y-1">
+                        <div className="flex items-center gap-2 text-text-muted text-xs font-medium">
+                          <Layers className="w-4 h-4 text-primary" />
+                          <span>Number of Questions</span>
+                        </div>
+                        <p className="text-sm font-bold text-text-primary">
+                          {displayQuestions.length} Practice MCQs
+                        </p>
+                        <span className="text-[11px] text-text-muted block">One question at a time</span>
+                      </div>
 
-                        return (
-                          <Card
-                            key={q.id || `q-${qIndex}`}
-                            className="p-5 bg-surface border-border shadow-card space-y-4 transition-all hover:border-primary/30 overflow-hidden"
+                      {/* Difficulty Level */}
+                      <div className="p-4 rounded-xl bg-surface-elevated/60 border border-border space-y-1">
+                        <div className="flex items-center gap-2 text-text-muted text-xs font-medium">
+                          <Target className="w-4 h-4 text-primary" />
+                          <span>Difficulty</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={
+                              difficulty === 'HARD'
+                                ? 'critical'
+                                : difficulty === 'EASY'
+                                ? 'success'
+                                : difficulty === 'MIXED'
+                                ? 'ai'
+                                : 'neutral'
+                            }
+                            size="sm"
+                            className="font-bold uppercase tracking-wider"
                           >
-                            {/* Question Metadata Header */}
-                            <div className="flex items-start justify-between gap-3 pb-3 border-b border-border flex-wrap">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-bold text-primary px-2.5 py-1 rounded-lg bg-primary-light">
-                                  Question {qIndex + 1} of {displayQuestions.length}
-                                </span>
-
-                                {q.topic && (
-                                  <Badge variant="neutral" size="sm" className="text-[11px] font-medium max-w-xs truncate" title={q.topic}>
-                                    Topic: {q.topic}
-                                  </Badge>
-                                )}
-
-                                {q.difficulty && (
-                                  <Badge
-                                    variant={
-                                      q.difficulty === 'HARD'
-                                        ? 'critical'
-                                        : q.difficulty === 'EASY'
-                                        ? 'success'
-                                        : 'neutral'
-                                    }
-                                    size="sm"
-                                    className="font-bold uppercase tracking-wider"
-                                  >
-                                    {q.difficulty}
-                                  </Badge>
-                                )}
-
-                                <Badge variant="success" size="sm" withDot>
-                                  {q.validation_status || 'VALID'}
-                                </Badge>
-                              </div>
-
-                              {/* Clearly Identifiable Correct Answer Badge in Preview Mode */}
-                              {correctKey && (
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                  <span>Correct: Option {correctKey}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Question Statement */}
-                            <div className="break-words">
-                              <p className="text-sm sm:text-base font-bold text-text-primary leading-relaxed break-words">
-                                {q.question_text}
-                              </p>
-                            </div>
-
-                            {/* MCQ Options Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                              {optionsList.map((opt) => {
-                                const isCorrect = correctKey === opt.key;
-                                return (
-                                  <div
-                                    key={opt.key}
-                                    className={`p-3 rounded-xl border transition-all flex items-start gap-3 overflow-hidden ${
-                                      isCorrect
-                                        ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500/30 shadow-xs'
-                                        : 'bg-surface-elevated/40 border-border text-text-primary'
-                                    }`}
-                                  >
-                                    <div
-                                      className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                                        isCorrect
-                                          ? 'bg-emerald-600 text-white shadow-xs'
-                                          : 'bg-border text-text-muted'
-                                      }`}
-                                    >
-                                      {opt.key}
-                                    </div>
-                                    <div className="flex-1 min-w-0 break-words">
-                                      <span className="text-xs sm:text-sm block leading-snug break-words">
-                                        {opt.text}
-                                      </span>
-                                      {isCorrect && (
-                                        <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                                          <CheckCircle2 className="w-3 h-3 shrink-0" />
-                                          <span>Correct Answer</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-
-                            {/* Educational Explanation & Context */}
-                            {q.explanation && (
-                              <div className="p-3.5 rounded-xl bg-surface-elevated/70 border border-border space-y-1.5 text-xs break-words">
-                                <div className="flex items-center gap-1.5 font-bold text-text-primary">
-                                  <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
-                                  <span>Educational Explanation & Context</span>
-                                </div>
-                                <p className="text-text-secondary leading-relaxed text-[11px] sm:text-xs break-words">
-                                  {q.explanation}
-                                </p>
-                                {q.source_reference && (
-                                  <p className="text-[10px] text-text-muted italic pt-1 border-t border-border break-words">
-                                    {q.source_reference}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </Card>
-                        );
-                      })}
+                            {difficulty}
+                          </Badge>
+                        </div>
+                        <span className="text-[11px] text-text-muted block">Adaptive standard</span>
+                      </div>
                     </div>
 
-                    {/* Bottom Practice Actions Card */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-surface border border-border shadow-card">
-                      <div>
-                        <h4 className="text-xs font-bold text-text-primary">
-                          Ready to test your comprehension?
-                        </h4>
-                        <p className="text-[11px] text-text-muted">
-                          Take this practice quiz one question at a time to test your knowledge with server-evaluated feedback.
+                    {/* Quiz Instructions / Information Callout */}
+                    <div className="p-4 rounded-xl bg-primary-light/20 border border-primary/20 flex items-start gap-3 text-xs">
+                      <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <span className="font-bold text-text-primary block">
+                          Formative Assessment Instructions
+                        </span>
+                        <p className="text-text-secondary leading-relaxed">
+                          Questions will be presented one at a time. Answers are evaluated securely server-side. 
+                          Correct answers, score metrics, and comprehensive educational explanations will be revealed immediately upon submitting your completed quiz.
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            window.scrollTo({ top: 150, behavior: 'smooth' });
-                          }}
-                          className="text-xs font-semibold"
-                        >
-                          Adjust Settings
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={handleStartQuiz}
-                          className="text-xs gap-1.5 font-bold shadow-xs"
-                        >
-                          <PlayCircle className="w-4 h-4" />
-                          <span>Start Practice Quiz</span>
-                        </Button>
-                      </div>
                     </div>
-                  </>
+
+                    {/* Action Row */}
+                    <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="md"
+                        onClick={() => {
+                          window.scrollTo({ top: 150, behavior: 'smooth' });
+                        }}
+                        className="text-xs font-semibold self-start sm:self-center"
+                      >
+                        Adjust Quiz Settings
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="lg"
+                        onClick={handleStartQuiz}
+                        disabled={isGenerating || displayQuestions.length === 0}
+                        className="gap-2 text-sm font-bold shadow-md min-w-[180px] justify-center"
+                      >
+                        <PlayCircle className="w-5 h-5" />
+                        <span>Start Quiz</span>
+                      </Button>
+                    </div>
+                  </Card>
                 )}
 
                 {/* ---------------------------------------------------- */}
@@ -1473,11 +1405,11 @@ export default function LearnerQuizGeneratorPage() {
                             type="button"
                             variant="primary"
                             size="sm"
-                            onClick={() => setQuizViewMode('PREVIEW')}
+                            onClick={() => setResultSubTab('REVIEW')}
                             className="gap-1.5 text-xs font-semibold shadow-xs"
                           >
                             <BookOpen className="w-3.5 h-3.5" />
-                            <span>View All Questions</span>
+                            <span>Review All Questions</span>
                           </Button>
                         </div>
                       </div>

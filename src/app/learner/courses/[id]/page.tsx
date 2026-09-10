@@ -14,9 +14,19 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AppShell } from '@/components/layout/AppShell';
-import { courseService, watchTimeService } from '@/services';
+import { courseService, learningPathService, watchTimeService } from '@/services';
 import { useAuth } from '@/context/AuthContext';
 import type { CourseResponse } from '@/types/api';
+
+function isValidLearningPlatformUrl(urlStr?: string): boolean {
+  if (!urlStr) return false;
+  try {
+    const parsed = new URL(urlStr);
+    return parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 import { 
   ChevronRight, 
@@ -32,7 +42,8 @@ import {
   Sparkles,
   ExternalLink,
   Info,
-  Loader2
+  Loader2,
+  Route
 } from 'lucide-react';
 
 interface PageProps {
@@ -57,6 +68,9 @@ export default function CourseDetailPage({ params }: PageProps) {
   const [isLoading, setIsLoading] = useState<boolean>(!initialMatch);
   const [isSaved, setIsSaved] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'info'>('success');
+  const [isAddingToPath, setIsAddingToPath] = useState(false);
+  const [addedToPath, setAddedToPath] = useState(false);
 
 
   useEffect(() => {
@@ -96,6 +110,7 @@ export default function CourseDetailPage({ params }: PageProps) {
             id: res.id,
             title: res.title,
             provider: providerVal,
+            url: res.url || initialMatch?.url || undefined,
             domain: domainVal,
             difficulty: diffMap[res.difficulty] || 'Intermediate',
             duration: `${res.duration_hours || 12} Hours`,
@@ -169,7 +184,8 @@ export default function CourseDetailPage({ params }: PageProps) {
     return () => {
       isMounted = false;
     };
-  }, [id, initialMatch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -231,20 +247,41 @@ export default function CourseDetailPage({ params }: PageProps) {
   }
 
   const handleStartLearning = () => {
-    if (userId) {
-      watchTimeService.recordWatchHours(userId, 1.5);
-      setToastMessage(`Course launched! Logged +1.5h watch time into your learning profile.`);
+    if (course.url && isValidLearningPlatformUrl(course.url)) {
+      window.open(course.url, '_blank', 'noopener,noreferrer');
+      setToastType('success');
+      setToastMessage('Opening external course on learning platform...');
     } else {
-      setToastMessage(`Course launched! Connecting to ${course.provider} learning environment...`);
+      setToastType('info');
+      setToastMessage('External course link is currently unavailable for this course.');
     }
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);
   };
 
+  const handleAddToLearningPath = async () => {
+    if (!course || addedToPath || isAddingToPath) return;
+    setIsAddingToPath(true);
+    try {
+      await learningPathService.addCourseToLearningPath(course.id);
+      setAddedToPath(true);
+      setToastType('success');
+      setToastMessage(`"${course.title}" added to your learning path.`);
+    } catch (err: any) {
+      const message = err?.message || 'Could not add course to learning path.';
+      setToastType('info');
+      setToastMessage(message.includes('already') ? 'This course is already in your learning path.' : message);
+    } finally {
+      setIsAddingToPath(false);
+      setTimeout(() => setToastMessage(null), 4500);
+    }
+  };
+
   const handleToggleBookmark = () => {
     const nextState = !isSaved;
     setIsSaved(nextState);
+    setToastType('success');
     setToastMessage(nextState ? `Saved "${course.title}" to your list` : `Removed "${course.title}" from saved`);
     setTimeout(() => {
       setToastMessage(null);
@@ -272,7 +309,11 @@ export default function CourseDetailPage({ params }: PageProps) {
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          {toastType === 'info' ? (
+            <Info className="w-5 h-5 text-amber-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          )}
           <span className="text-xs font-medium">{toastMessage}</span>
         </div>
       )}
@@ -354,14 +395,61 @@ export default function CourseDetailPage({ params }: PageProps) {
 
           {/* Action CTAs */}
           <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 lg:w-60">
+            {course.url && isValidLearningPlatformUrl(course.url) ? (
+              <a
+                href={course.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full block"
+              >
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full justify-center text-sm font-semibold shadow-md shadow-indigo-600/20 gap-2 pointer-events-none"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Open Course
+                </Button>
+              </a>
+            ) : (
+              <Button
+                variant="primary"
+                size="lg"
+                disabled
+                className="w-full justify-center text-sm font-semibold gap-2 opacity-60 cursor-not-allowed"
+              >
+                <PlayCircle className="w-5 h-5" />
+                Course Content Unavailable
+              </Button>
+            )}
+
             <Button
-              variant="primary"
-              size="lg"
-              onClick={handleStartLearning}
-              className="w-full justify-center text-sm font-semibold shadow-md shadow-indigo-600/20 gap-2"
+              variant="secondary"
+              size="md"
+              onClick={handleAddToLearningPath}
+              disabled={addedToPath || isAddingToPath}
+              className={`w-full justify-center text-xs font-semibold gap-2 ${
+                addedToPath
+                  ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                  : 'text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30'
+              }`}
             >
-              <PlayCircle className="w-5 h-5" />
-              Start Learning
+              {isAddingToPath ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding…
+                </>
+              ) : addedToPath ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  Added to Learning Path
+                </>
+              ) : (
+                <>
+                  <Route className="w-4 h-4" />
+                  Add to My Learning Path
+                </>
+              )}
             </Button>
 
             <Button

@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/competiq"
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # JWT Authentication & Security
     SECRET_KEY: str = "replace_with_secure_random_secret_key_development_32chars"

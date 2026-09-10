@@ -16,6 +16,7 @@ from app.models.generated_question import GeneratedQuestion
 from app.models.learning_material import LearningMaterial
 from app.models.learning_path import LearningPath
 from app.models.learning_path_item import LearningPathItem
+from app.models.notification import Notification
 from app.models.practice_quiz_attempt import PracticeQuizAttempt
 from app.models.question import Question
 from app.models.question_attempt import QuestionAttempt
@@ -46,6 +47,7 @@ __all__ = [
     "LearningPathItem",
     "Assessment",
     "AssessmentAssignment",
+    "Notification",
     "Question",
     "AssessmentAttempt",
     "QuestionAttempt",

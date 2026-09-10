@@ -21,9 +21,11 @@ from app.api.courses import router as courses_router
 from app.api.health import router as health_router
 from app.api.learning_paths import router as learning_paths_router
 from app.api.materials import router as materials_router
+from app.api.notifications import router as notifications_router
 from app.api.onboarding import router as onboarding_router
 from app.api.quiz import router as quiz_router
 from app.api.recommendations import router as recommendations_router
+from app.api.search import router as search_router
 from app.api.skill_gaps import router as skill_gaps_router
 from app.core.config import settings
 from app.database.init_db import init_db
@@ -57,9 +59,11 @@ app = FastAPI(
 # -----------------------------------------------------------------------------
 # CORS Configuration
 # -----------------------------------------------------------------------------
+# Parse allowed origins from environment configuration
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    origin.strip()
+    for origin in settings.CORS_ORIGINS.split(",")
+    if origin.strip()
 ]
 
 app.add_middleware(
@@ -141,6 +145,22 @@ async def root() -> Dict[str, str]:
     }
 
 
+@app.get(
+    "/health",
+    status_code=status.HTTP_200_OK,
+    summary="Root Service Health Check",
+    description="Returns operational status and version info for platform health checks.",
+    tags=["Health"],
+)
+async def root_health_check() -> Dict[str, str]:
+    """Lightweight unauthenticated health check endpoint."""
+    return {
+        "status": "ok",
+        "service": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+    }
+
+
 # -----------------------------------------------------------------------------
 # API v1 Router Registration
 # -----------------------------------------------------------------------------
@@ -156,8 +176,10 @@ app.include_router(recommendations_router, prefix=API_V1_PREFIX)
 app.include_router(learning_paths_router, prefix=API_V1_PREFIX)
 app.include_router(onboarding_router, prefix=API_V1_PREFIX)
 app.include_router(assessments_router, prefix=API_V1_PREFIX)
+app.include_router(notifications_router, prefix=API_V1_PREFIX)
 app.include_router(quiz_router, prefix=API_V1_PREFIX)
 app.include_router(ai_assessments_router, prefix=API_V1_PREFIX)
 app.include_router(assistant_router, prefix=API_V1_PREFIX)
 app.include_router(materials_router, prefix=API_V1_PREFIX)
 app.include_router(analytics_router, prefix=API_V1_PREFIX)
+app.include_router(search_router, prefix=API_V1_PREFIX)

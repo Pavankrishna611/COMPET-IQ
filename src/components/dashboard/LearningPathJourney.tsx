@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { DepthCarousel, DepthCarouselItem } from '@/components/ui/DepthCarousel';
 import { learnerLearningPathSteps, LearningJourneyStep } from '@/data/dashboard';
 import {
   CheckCircle2,
@@ -16,10 +17,24 @@ import {
   Clock,
   BookOpen,
   Route,
+  Layers,
+  ListOrdered,
+  ExternalLink,
 } from 'lucide-react';
 
+const STEP_IMAGES = [
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop', // Code / Python
+  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop', // Charts / Sampling
+  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop', // Analytics / National Accounts
+  'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?q=80&w=800&auto=format&fit=crop', // Data Quality
+  'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop', // AI / Machine Learning
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop', // Hardware / Computing
+];
+
 export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }) {
+  const [viewMode, setViewMode] = useState<'depth' | 'timeline'>('depth');
   const displaySteps = steps && steps.length > 0 ? steps : learnerLearningPathSteps;
+
   const getStatusBadge = (status: LearningJourneyStep['status']) => {
     switch (status) {
       case 'completed':
@@ -78,37 +93,80 @@ export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }
     }
   };
 
+  const carouselItems: DepthCarouselItem[] = displaySteps.map((step, idx) => ({
+    image: STEP_IMAGES[idx % STEP_IMAGES.length],
+    alt: step.title,
+    step,
+  }));
+
   return (
-    <Card className="p-5 lg:p-6 border-border shadow-card">
+    <Card className="p-5 lg:p-6 border-border shadow-card overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-border-light">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border-light">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-btn bg-teal-light text-teal flex items-center justify-center shrink-0">
             <Route className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-text-primary">
-              Your AI-Powered Learning Path
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-text-primary">
+                Your AI-Powered Learning Path
+              </h2>
+              <span className="text-[10px] font-bold bg-teal/10 text-teal border border-teal/20 px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block">
+                3D Interactive Journey
+              </span>
+            </div>
             <p className="text-xs text-text-secondary mt-0.5">
-              Recommended based on your role, competency gaps and learning history.
+              Personalized sequencing targeting critical MoSPI competency gaps.
             </p>
           </div>
         </div>
 
-        <Link href="/learner/learning-path" className="self-start sm:self-auto shrink-0">
-          <Button
-            variant="secondary"
-            size="sm"
-            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-          >
-            View Full Learning Path
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-[#F0F4F8] p-0.5 rounded-btn border border-border">
+            <button
+              type="button"
+              onClick={() => setViewMode('depth')}
+              title="3D Depth View"
+              className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === 'depth'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>3D Depth</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('timeline')}
+              title="Timeline Sequence View"
+              className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                viewMode === 'timeline'
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <ListOrdered className="w-3.5 h-3.5" />
+              <span>Timeline</span>
+            </button>
+          </div>
+
+          <Link href="/learner/learning-path">
+            <Button
+              variant="secondary"
+              size="sm"
+              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+            >
+              Full Path
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* Steps Journey Container */}
-      <div className="pt-6">
+      {/* Content Area */}
+      <div className="pt-4">
         {steps !== undefined && steps.length === 0 ? (
           <div className="py-8 text-center flex flex-col items-center justify-center gap-3">
             <div className="w-12 h-12 rounded-full bg-teal-light text-teal flex items-center justify-center">
@@ -126,15 +184,108 @@ export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }
               </Button>
             </Link>
           </div>
+        ) : viewMode === 'depth' ? (
+          /* =========================================================================
+              3D DEPTH CAROUSEL VIEW
+             ========================================================================= */
+          <div className="w-full relative py-2">
+            <div className="w-full h-[450px] relative overflow-hidden flex items-center justify-center bg-gradient-to-b from-[#0e2238] via-[#102d4c] to-[#0a192f] rounded-2xl border border-[#1b3d63] shadow-inner">
+              <DepthCarousel
+                items={carouselItems}
+                depth={210}
+                spread={90}
+                tilt={20}
+                tiltDirection="right"
+                perspective={1400}
+                visibleCards={4}
+                falloff={0.22}
+                blur={5}
+                cardWidth={310}
+                cardHeight={370}
+                radius={16}
+                tint="#071322"
+                autoplay={false}
+                loop={true}
+                showControls={true}
+                showIndicators={true}
+                renderCard={(item) => {
+                  const step: LearningJourneyStep = item.step;
+                  return (
+                    <div className="flex flex-col justify-between h-full w-full">
+                      {/* Top Header inside card */}
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="text-[11px] font-mono font-bold text-teal bg-teal/20 backdrop-blur-md px-2 py-0.5 rounded-full border border-teal/30">
+                            STEP {step.stepNumber} OF {displaySteps.length}
+                          </span>
+                          {getStatusBadge(step.status)}
+                        </div>
+
+                        <span className="text-[11px] text-white/70 uppercase tracking-wider font-semibold block mt-1">
+                          {step.provider}
+                        </span>
+
+                        <h3 className="text-sm sm:text-base font-bold text-white mt-1 line-clamp-2 leading-snug drop-shadow-sm">
+                          {step.title}
+                        </h3>
+                      </div>
+
+                      {/* Bottom Footer inside card */}
+                      <div className="pt-3 border-t border-white/15 backdrop-blur-sm bg-black/20 -mx-5 -mb-5 p-4 rounded-b-2xl">
+                        {step.status === 'in_progress' && typeof step.progress === 'number' && (
+                          <div className="mb-2.5">
+                            <div className="flex justify-between text-[11px] font-semibold text-teal mb-1">
+                              <span>Course Progress</span>
+                              <span>{step.progress}%</span>
+                            </div>
+                            <ProgressBar value={step.progress} variant="teal" size="sm" />
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-xs text-white/80 mb-3">
+                          <span className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-3.5 h-3.5 text-teal" />
+                            {step.duration}
+                          </span>
+                          <span className="flex items-center gap-1.5 font-medium text-white/90 truncate max-w-[130px]" title={step.skill}>
+                            <BookOpen className="w-3.5 h-3.5 text-teal" />
+                            {step.skill}
+                          </span>
+                        </div>
+
+                        <Link href="/learner/learning-path" className="block w-full">
+                          <button
+                            type="button"
+                            className="w-full py-2 px-3 rounded-lg bg-teal text-white font-semibold text-xs hover:bg-teal-dark transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg"
+                          >
+                            <span>
+                              {step.status === 'completed'
+                                ? 'Review Module'
+                                : step.status === 'in_progress'
+                                  ? 'Continue Learning'
+                                  : 'Start Module'}
+                            </span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+            </div>
+          </div>
         ) : (
+          /* =========================================================================
+              TRADITIONAL TIMELINE SEQUENCE VIEW
+             ========================================================================= */
           <>
             {/* Desktop Horizontal View (lg+) */}
-            <div className="hidden lg:grid grid-cols-5 gap-3 relative">
-
+            <div className="hidden lg:grid grid-cols-5 gap-3 relative pt-3">
               {/* Connector Line behind steps */}
-              <div className="absolute top-5 left-8 right-8 h-0.5 bg-border -z-0" />
+              <div className="absolute top-8 left-8 right-8 h-0.5 bg-border -z-0" />
 
-              {displaySteps.map((step, idx) => (
+              {displaySteps.map((step) => (
                 <div key={step.stepNumber} className="relative z-10 flex flex-col items-center text-center">
                   {/* Step indicator node */}
                   <div
@@ -191,7 +342,7 @@ export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }
             </div>
 
             {/* Mobile & Tablet Vertical View (< lg) */}
-            <div className="lg:hidden relative pl-6 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+            <div className="lg:hidden relative pl-6 space-y-4 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border pt-2">
               {displaySteps.map((step) => (
                 <div key={step.stepNumber} className="relative">
                   {/* Timeline Node */}
@@ -253,5 +404,4 @@ export function LearningPathJourney({ steps }: { steps?: LearningJourneyStep[] }
       </div>
     </Card>
   );
-
 }

@@ -232,8 +232,8 @@ export default function MyCompetenciesPage() {
                 key={domain}
                 onClick={() => setSelectedDomain(domain)}
                 className={`px-3.5 py-1.5 rounded-btn text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${selectedDomain === domain
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-[#F5F8FC] border border-border'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'bg-surface text-text-secondary hover:text-text-primary hover:bg-[#F5F8FC] border border-border'
                   }`}
               >
                 <span>{domain}</span>

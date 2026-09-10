@@ -55,7 +55,7 @@ export function WelcomeHero() {
       {/* Right AI Intelligence Status Card */}
       <Card className="lg:w-80 p-5 bg-gradient-to-br from-surface to-ai-light/30 border-ai-purple/30 flex flex-col justify-between shadow-card relative overflow-hidden">
         <div className="absolute top-0 right-0 w-24 h-24 bg-ai-purple/5 rounded-full blur-2xl pointer-events-none" />
-        
+
         <div>
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <div className="flex items-center gap-1.5">
@@ -66,7 +66,7 @@ export function WelcomeHero() {
                 {learnerProfileOverview.aiStatus.badge}
               </span>
             </div>
-            
+
             <Badge variant="ai" size="sm" withDot>
               {learnerProfileOverview.aiStatus.status}
             </Badge>

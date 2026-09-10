@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { Logo } from '@/components/common';
 import { onboardingService } from '@/services/onboarding.service';
 import { authService } from '@/services/auth.service';
 import { useAuth } from '@/context/AuthContext';
@@ -350,8 +351,8 @@ export default function OnboardingProfilePage() {
       setIsSubmitting(false);
       setErrorMessage(
         err.detail?.message ||
-          err.message ||
-          'Failed to finalize competency onboarding. Please verify your connection and try again.'
+        err.message ||
+        'Failed to finalize competency onboarding. Please verify your connection and try again.'
       );
     }
   };
@@ -361,17 +362,12 @@ export default function OnboardingProfilePage() {
       {/* Top Navigation Header */}
       <header className="h-16 border-b border-border bg-surface px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-btn bg-teal flex items-center justify-center font-bold text-white text-sm shadow-sm">
-            CQ
+          <div className="bg-navy px-2.5 py-1 rounded-xl shadow-xs flex items-center">
+            <Logo size="sm" className="h-7 w-auto" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-wider text-text-primary leading-none">
-              COMPET<span className="text-teal">IQ</span>
-            </span>
-            <span className="text-[10px] text-text-muted tracking-tight uppercase font-medium mt-0.5">
-              Professional Onboarding Wizard
-            </span>
-          </div>
+          <span className="text-[11px] text-text-muted tracking-tight uppercase font-medium border-l border-border pl-3">
+            Professional Onboarding Wizard
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -595,17 +591,15 @@ export default function OnboardingProfilePage() {
                         key={goal}
                         type="button"
                         onClick={() => handleToggleGoal(goal)}
-                        className={`p-3.5 rounded-xl border text-left text-xs font-semibold flex items-center justify-between transition-all ${
-                          isSelected
+                        className={`p-3.5 rounded-xl border text-left text-xs font-semibold flex items-center justify-between transition-all ${isSelected
                             ? 'border-primary bg-primary-light/40 text-primary ring-1 ring-primary'
                             : 'border-border bg-surface-elevated/40 text-text-primary hover:border-primary/40'
-                        }`}
+                          }`}
                       >
                         <span>{goal}</span>
                         <div
-                          className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-2 ${
-                            isSelected ? 'bg-primary text-white' : 'border border-border text-transparent'
-                          }`}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-2 ${isSelected ? 'bg-primary text-white' : 'border border-border text-transparent'
+                            }`}
                         >
                           <Check className="w-3 h-3" />
                         </div>
@@ -687,11 +681,10 @@ export default function OnboardingProfilePage() {
                                 key={comp.id}
                                 type="button"
                                 onClick={() => handleToggleSkill(comp)}
-                                className={`p-3 rounded-xl border text-left text-xs transition-all flex items-start justify-between gap-2 ${
-                                  isSelected
+                                className={`p-3 rounded-xl border text-left text-xs transition-all flex items-start justify-between gap-2 ${isSelected
                                     ? 'border-primary bg-primary-light/40 text-primary ring-1 ring-primary'
                                     : 'border-border bg-surface hover:border-primary/40 text-text-primary'
-                                }`}
+                                  }`}
                               >
                                 <div className="min-w-0">
                                   <span className="font-bold block truncate">{comp.name}</span>
@@ -702,11 +695,10 @@ export default function OnboardingProfilePage() {
                                   )}
                                 </div>
                                 <div
-                                  className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                                    isSelected
+                                  className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isSelected
                                       ? 'bg-primary text-white'
                                       : 'border border-border text-transparent'
-                                  }`}
+                                    }`}
                                 >
                                   <Check className="w-2.5 h-2.5" />
                                 </div>
@@ -828,10 +820,10 @@ export default function OnboardingProfilePage() {
                                 rating.experienceYears <= 1
                                   ? '0-1'
                                   : rating.experienceYears <= 3
-                                  ? '1-3'
-                                  : rating.experienceYears <= 5
-                                  ? '3-5'
-                                  : '5+'
+                                    ? '1-3'
+                                    : rating.experienceYears <= 5
+                                      ? '3-5'
+                                      : '5+'
                               }
                               onChange={(e) => {
                                 const val = e.target.value;

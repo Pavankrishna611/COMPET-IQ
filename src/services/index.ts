@@ -15,4 +15,6 @@ export * from './ai-assessment.service';
 export * from './analytics.service';
 export * from './onboarding.service';
 export * from './watch-time.service';
+export * from './search.service';
+export * from './notification.service';
 

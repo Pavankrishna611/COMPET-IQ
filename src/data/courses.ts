@@ -38,6 +38,7 @@ export interface DetailedCourse {
     statusText: string;
   };
   relatedCourseIds: string[];
+  url?: string;
 }
 
 export const mockDetailedCourses: DetailedCourse[] = [
@@ -45,6 +46,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-py-stats',
     title: 'Python for Statistical Analysis',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Technical',
     difficulty: 'Intermediate',
     duration: '8 Hours',
@@ -136,6 +138,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-vis-py',
     title: 'Data Visualization with Python',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Technical',
     difficulty: 'Intermediate',
     duration: '6 Hours',
@@ -221,6 +224,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-sql-ana',
     title: 'SQL for Data Analysis',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Technical',
     difficulty: 'Intermediate',
     duration: '7 Hours',
@@ -262,6 +266,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-py-fund',
     title: 'Python Fundamentals',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Technical',
     difficulty: 'Beginner',
     duration: '6 Hours',
@@ -302,7 +307,8 @@ export const mockDetailedCourses: DetailedCourse[] = [
   {
     id: 'crs-stat-proj',
     title: 'Applied Statistical Data Project',
-    provider: 'NSSTA / TPAC',
+    provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Statistical Methods',
     difficulty: 'Advanced',
     duration: '12 Hours',
@@ -344,6 +350,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-py-adv',
     title: 'Advanced Python for Data Processing',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Technical',
     difficulty: 'Advanced',
     duration: '10 Hours',
@@ -369,6 +376,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-sql-adv',
     title: 'Advanced SQL for Statisticians',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Technical',
     difficulty: 'Advanced',
     duration: '9 Hours',
@@ -465,6 +473,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-gov-prv',
     title: 'Data Privacy and Governance (DPDPA 2023)',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Digital Governance',
     difficulty: 'Beginner',
     duration: '5 Hours',
@@ -489,6 +498,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-gov-sec',
     title: 'Cybersecurity Awareness for Public Servants',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Digital Governance',
     difficulty: 'Beginner',
     duration: '4 Hours',
@@ -561,6 +571,7 @@ export const mockDetailedCourses: DetailedCourse[] = [
     id: 'crs-beh-pm',
     title: 'Project Management for Government Officers',
     provider: 'iGOT Karmayogi',
+    url: 'https://portal.igotkarmayogi.gov.in/',
     domain: 'Behavioural',
     difficulty: 'Intermediate',
     duration: '6 Hours',
@@ -620,4 +631,5 @@ export const mockCourses: Course[] = mockDetailedCourses.map((c) => ({
   format: 'Self-Paced',
   description: c.description,
   enrolledCount: c.enrolledCount,
+  url: c.url,
 }));

@@ -197,7 +197,7 @@ export const learningPathStages: LearningStageItem[] = [
     stageNumber: 6,
     title: 'Applied Statistical Data Project',
     courseId: 'crs-stat-proj',
-    provider: 'NSSTA / TPAC',
+    provider: 'iGOT Karmayogi',
     status: 'upcoming',
     duration: '12 Hours',
     skills: ['Data Analysis', 'Visualization', 'Statistical Reporting', 'Applied Research'],

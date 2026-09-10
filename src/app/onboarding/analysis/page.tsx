@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Logo } from '@/components/common';
 import { useAuth } from '@/context/AuthContext';
 import { onboardingService } from '@/services/onboarding.service';
 import { SuggestedCompetencyResponse, AcceptedCompetencyItem } from '@/types/api';
@@ -221,17 +222,12 @@ export default function OnboardingAnalysisPage() {
       {/* Top Header */}
       <header className="h-16 border-b border-border bg-surface px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-btn bg-teal flex items-center justify-center font-bold text-white text-sm shadow-sm">
-            CQ
+          <div className="bg-navy px-2.5 py-1 rounded-xl shadow-xs flex items-center">
+            <Logo size="sm" className="h-7 w-auto" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-wider text-text-primary leading-none">
-              COMPET<span className="text-teal">IQ</span>
-            </span>
-            <span className="text-[10px] text-text-muted tracking-tight uppercase font-medium mt-0.5">
-              Official Statistics Competency Framework
-            </span>
-          </div>
+          <span className="text-[11px] text-text-muted tracking-tight uppercase font-medium border-l border-border pl-3">
+            Official Statistics Competency Framework
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -288,9 +284,8 @@ export default function OnboardingAnalysisPage() {
                     return (
                       <div
                         key={stage.id}
-                        className={`flex items-start gap-3.5 transition-all duration-300 ${
-                          isUpcoming ? 'opacity-40' : 'opacity-100'
-                        }`}
+                        className={`flex items-start gap-3.5 transition-all duration-300 ${isUpcoming ? 'opacity-40' : 'opacity-100'
+                          }`}
                       >
                         {/* Step indicator */}
                         <div className="mt-0.5 shrink-0">
@@ -312,13 +307,12 @@ export default function OnboardingAnalysisPage() {
                         {/* Step text */}
                         <div className="flex-1 min-w-0">
                           <p
-                            className={`text-xs font-semibold ${
-                              isCurrent
+                            className={`text-xs font-semibold ${isCurrent
                                 ? 'text-teal font-bold'
                                 : isPassed
-                                ? 'text-text-primary'
-                                : 'text-text-muted'
-                            }`}
+                                  ? 'text-text-primary'
+                                  : 'text-text-muted'
+                              }`}
                           >
                             {stage.title}
                           </p>

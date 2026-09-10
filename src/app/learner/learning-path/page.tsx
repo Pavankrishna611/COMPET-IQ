@@ -160,21 +160,21 @@ export default function LearnerLearningPathPage() {
         )}
 
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-light pb-6">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <Badge variant="ai" size="sm" className="gap-1.5 font-medium">
                 <Sparkles className="w-3.5 h-3.5" />
                 AI-Curated Trajectory
               </Badge>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-text-muted font-mono">
                 Trajectory ID: {learningPath?.id ? `LP-${learningPath.id.slice(0, 8)}` : 'LP-2026-ISS-042'}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
               {learningPath?.title || 'Your Personalized Learning Path'}
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl">
+            <p className="text-sm text-text-secondary mt-1 max-w-3xl">
               {learningPath?.description || 'An AI-curated learning journey based on your competency profile, identified skill gaps, and MoSPI role requirements.'}
             </p>
           </div>
@@ -185,9 +185,9 @@ export default function LearnerLearningPathPage() {
               variant="secondary"
               size="sm"
               onClick={() => setIsRecalcModalOpen(true)}
-              className="text-xs font-semibold gap-2 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+              className="text-xs font-semibold gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
               Recalculate Learning Path
             </Button>
 
@@ -213,16 +213,16 @@ export default function LearnerLearningPathPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Route className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+                <Route className="w-5 h-5 text-indigo-600" />
                 Competency Roadmap
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-text-secondary">
                 Stages are unlocked sequentially to guarantee solid prerequisites before advanced coursework.
               </p>
             </div>
 
-            <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full self-start sm:self-auto">
+            <span className="text-xs font-medium text-text-muted bg-surface-alt px-3 py-1 rounded-full self-start sm:self-auto border border-border-light">
               Click any milestone card to inspect syllabus &amp; competencies
             </span>
           </div>

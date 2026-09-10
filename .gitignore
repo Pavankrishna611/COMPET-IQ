@@ -44,4 +44,5 @@ uploads/
 *.sqlite3
 backend/vector_store/
 vector_store/
+scratch/
 

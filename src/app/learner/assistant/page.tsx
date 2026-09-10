@@ -234,7 +234,7 @@ export default function LearnerAssistantPage() {
                 Learning Intelligence Active
               </Badge>
               <Badge variant="neutral" size="sm" className="font-mono text-[10px] hidden sm:inline-flex">
-                RAG Grounded Demo Mode
+                RAG Grounded Intelligence
               </Badge>
             </div>
           </div>

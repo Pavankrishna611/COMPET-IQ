@@ -975,3 +975,50 @@ export interface InterestedCourseResponse {
   is_in_learning_path: boolean;
 }
 
+// ============================================================================
+// 13. Unified Global Search
+// ============================================================================
+export interface SearchResultItem {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  category: 'course' | 'competency' | 'assessment' | 'learning_path' | 'material';
+  category_label: string;
+  description?: string | null;
+  badge?: string | null;
+  url: string;
+  score: number;
+}
+
+export interface SearchResponse {
+  query: string;
+  total_results: number;
+  results: SearchResultItem[];
+  category_counts: Record<string, number>;
+}
+
+// ============================================================================
+// 14. Notifications
+// ============================================================================
+export interface NotificationResponse {
+  id: string;
+  user_id?: string | null;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'alert' | 'assessment';
+  target_role?: string | null;
+  action_url?: string | null;
+  reference_id?: string | null;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationSummaryResponse {
+  unread_count: number;
+  total_count: number;
+  items: NotificationResponse[];
+}
+
+
+

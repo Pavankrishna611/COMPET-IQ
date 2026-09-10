@@ -20,6 +20,7 @@ from app.database.init_db import seed_database_data
 from app.database.session import get_db
 from app.main import app
 from app.models.assessment import Assessment
+from app.models.assessment_assignment import AssessmentAssignment
 from app.models.assessment_attempt import AssessmentAttempt
 from app.models.competency import Competency
 from app.models.question import Question
@@ -231,6 +232,14 @@ def test_part6_assessment_lifecycle_and_security():
     assert res.status_code == 200
     assert res.json()["status"] == "PUBLISHED"
 
+    # 7.5 Trainer assigns assessment to learner
+    res = client.post(
+        f"/api/v1/assessments/{ass_id}/assign",
+        json={"learner_ids": [str(learner_id)]},
+        headers=trainer_headers,
+    )
+    assert res.status_code == 200
+
     # 8. Learner views assessment details -> MUST NOT include correct_option or explanation
     res = client.get(f"/api/v1/assessments/{ass_id}", headers=learner_headers)
     assert res.status_code == 200
@@ -276,6 +285,22 @@ def test_part6_quiz_flow_scoring_and_competency_update():
         # Target Python Fundamentals Assessment (10 questions)
         py_ass = session.query(Assessment).filter(Assessment.title == "Python Fundamentals Assessment").first()
         ass_id = py_ass.id
+
+        trainer = session.query(User).filter(User.official_id == "TR-202").first()
+        existing_assign = session.query(AssessmentAssignment).filter(
+            AssessmentAssignment.assessment_id == ass_id,
+            AssessmentAssignment.user_id == learner_id,
+        ).first()
+        if not existing_assign:
+            assign = AssessmentAssignment(
+                assessment_id=ass_id,
+                user_id=learner_id,
+                assigned_by=trainer.id if trainer else learner.id,
+                status="ASSIGNED",
+            )
+            session.add(assign)
+            session.commit()
+
         questions = (
             session.query(Question)
             .filter(Question.assessment_id == ass_id)

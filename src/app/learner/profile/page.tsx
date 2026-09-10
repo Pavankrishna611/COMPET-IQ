@@ -33,15 +33,15 @@ import { watchTimeService } from '@/services';
 export default function LearnerProfilePage() {
   const { user: authUser, currentUser, isDemoMode } = useAuth();
   const activeUser = currentUser || authUser;
-  const isDemo = isDemoMode || activeUser?.email === 'arjun.kumar@mospi.gov.in';
+  const isDemo = isDemoMode;
   const userId = activeUser?.id || '';
 
   const user = {
-    name: activeUser?.name || mockUsers.learner.name,
-    email: activeUser?.email || mockUsers.learner.email,
-    employeeId: activeUser?.employeeId || mockUsers.learner.employeeId,
-    designation: activeUser?.designation || mockUsers.learner.designation,
-    department: activeUser?.department || mockUsers.learner.department,
+    name: activeUser?.name || (isDemo ? mockUsers.learner.name : 'Learner Officer'),
+    email: activeUser?.email || (isDemo ? mockUsers.learner.email : ''),
+    employeeId: activeUser?.employeeId || (isDemo ? mockUsers.learner.employeeId : 'ID-PENDING'),
+    designation: activeUser?.designation || (isDemo ? mockUsers.learner.designation : 'Statistical Officer'),
+    department: activeUser?.department || (isDemo ? mockUsers.learner.department : 'Ministry of Statistics & Programme Implementation'),
   };
 
   const [watchHours, setWatchHours] = useState<number>(isDemo ? 42.5 : 0.0);
@@ -54,7 +54,7 @@ export default function LearnerProfilePage() {
     let isMounted = true;
     async function loadStats() {
       try {
-        const stats = await watchTimeService.getUserWatchTime(userId, isDemo);
+        const stats = await watchTimeService.getUserWatchTime(userId);
         if (isMounted) {
           setWatchHours(stats.totalWatchHours);
         }

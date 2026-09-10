@@ -88,10 +88,10 @@ export function CompetencyDetailModal({
             </span>
             <span
               className={`text-xl font-bold font-mono ${competency.gap > 1.0
-                  ? 'text-critical'
-                  : competency.gap > 0
-                    ? 'text-warning'
-                    : 'text-success'
+                ? 'text-critical'
+                : competency.gap > 0
+                  ? 'text-warning'
+                  : 'text-success'
                 }`}
             >
               {competency.gap > 0 ? `-${competency.gap.toFixed(1)}` : '0.0'}
