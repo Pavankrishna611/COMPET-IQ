@@ -6,7 +6,13 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { DepthCarousel, DepthCarouselItem } from '@/components/ui/DepthCarousel';
+import dynamic from 'next/dynamic';
+import type { DepthCarouselItem } from '@/components/ui/DepthCarousel';
+
+const DepthCarousel = dynamic(
+  () => import('@/components/ui/DepthCarousel').then((m) => m.DepthCarousel),
+  { ssr: false }
+);
 import { learnerLearningPathSteps, LearningJourneyStep } from '@/data/dashboard';
 import {
   CheckCircle2,
