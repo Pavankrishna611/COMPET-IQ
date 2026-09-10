@@ -74,6 +74,26 @@ export const authStorage = {
     } catch {}
   },
 
+  getIsDemoMode(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem(APP_CONFIG.demoModeStorageKey) === 'true';
+    } catch {
+      return false;
+    }
+  },
+
+  setIsDemoMode(isDemo: boolean): void {
+    if (typeof window === 'undefined') return;
+    try {
+      if (isDemo) {
+        localStorage.setItem(APP_CONFIG.demoModeStorageKey, 'true');
+      } else {
+        localStorage.removeItem(APP_CONFIG.demoModeStorageKey);
+      }
+    } catch {}
+  },
+
   clearAuth(): void {
     if (typeof window === 'undefined') return;
     try {

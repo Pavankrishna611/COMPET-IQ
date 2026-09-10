@@ -789,6 +789,91 @@ def seed_database_data(db_session: Optional[Session] = None) -> None:
                     session.flush()
                 depts_by_code[d_info["code"]] = dept
 
+            role_learner = session.query(Role).filter(Role.name == "LEARNER").first()
+            role_admin = session.query(Role).filter(Role.name == "ADMIN").first()
+            role_trainer = session.query(Role).filter(Role.name == "TRAINER").first()
+
+            demo_users = [
+                {
+                    "official_id": "SSS-2021-0892",
+                    "email": "arjun.kumar@mospi.gov.in",
+                    "full_name": "Arjun Kumar",
+                    "role_id": role_learner.id if role_learner else None,
+                    "department_id": depts_by_code.get("SDRD").id if depts_by_code.get("SDRD") else None,
+                    "designation": "Statistical Investigator",
+                    "experience_years": 4.0,
+                },
+                {
+                    "official_id": "ISS-2012-0198",
+                    "email": "priya.sharma@mospi.gov.in",
+                    "full_name": "Dr. Priya Sharma",
+                    "role_id": role_admin.id if role_admin else None,
+                    "department_id": depts_by_code.get("NAD").id if depts_by_code.get("NAD") else None,
+                    "designation": "Administrator",
+                    "experience_years": 14.0,
+                },
+                {
+                    "official_id": "TRN-2016-0089",
+                    "email": "rahul.verma@nssta.gov.in",
+                    "full_name": "Rahul Verma",
+                    "role_id": role_trainer.id if role_trainer else None,
+                    "department_id": depts_by_code.get("NSSTA").id if depts_by_code.get("NSSTA") else None,
+                    "designation": "Training Officer",
+                    "experience_years": 9.0,
+                },
+            ]
+
+            seeded_users = {}
+            for u_data in demo_users:
+                user = session.query(User).filter(User.email == u_data["email"]).first()
+                if not user:
+                    user = User(
+                        official_id=u_data["official_id"],
+                        email=u_data["email"],
+                        full_name=u_data["full_name"],
+                        password_hash=hash_password("demo123"),
+                        role_id=u_data["role_id"],
+                        department_id=u_data["department_id"],
+                        designation=u_data["designation"],
+                        experience_years=u_data["experience_years"],
+                        is_active=True,
+                    )
+                    session.add(user)
+                    session.flush()
+                seeded_users[u_data["email"]] = user
+
+            # Seed initial competency profile for Arjun Kumar (Learner)
+            arjun = seeded_users.get("arjun.kumar@mospi.gov.in")
+            if arjun:
+                learner_comps = [
+                    ("TECH_PY", 2.2, 0.85),
+                    ("TECH_SQL", 2.8, 0.80),
+                    ("STAT_SAMPLING", 3.2, 0.90),
+                    ("STAT_QUALITY", 2.5, 0.75),
+                    ("TECH_VIZ", 3.0, 0.82),
+                    ("TECH_GIS", 3.5, 0.88),
+                ]
+                for code, lvl, conf in learner_comps:
+                    comp_obj = comps_by_code.get(code)
+                    if comp_obj:
+                        existing_uc = (
+                            session.query(UserCompetency)
+                            .filter(
+                                UserCompetency.user_id == arjun.id,
+                                UserCompetency.competency_id == comp_obj.id,
+                            )
+                            .first()
+                        )
+                        if not existing_uc:
+                            session.add(
+                                UserCompetency(
+                                    user_id=arjun.id,
+                                    competency_id=comp_obj.id,
+                                    current_level=lvl,
+                                    confidence_score=conf,
+                                )
+                            )
+
             session.commit()
             logger.info("Database seed verification complete.")
     except Exception as exc:

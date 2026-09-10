@@ -31,19 +31,20 @@ import { useAuth } from '@/context/AuthContext';
 import { watchTimeService } from '@/services';
 
 export default function LearnerProfilePage() {
-  const { user: authUser, currentUser } = useAuth();
+  const { user: authUser, currentUser, isDemoMode } = useAuth();
   const activeUser = currentUser || authUser;
+  const isDemo = isDemoMode;
   const userId = activeUser?.id || '';
 
   const user = {
-    name: activeUser?.name || 'Learner Officer',
-    email: activeUser?.email || '',
-    employeeId: activeUser?.employeeId || 'ID-PENDING',
-    designation: activeUser?.designation || 'Statistical Officer',
-    department: activeUser?.department || 'Ministry of Statistics & Programme Implementation',
+    name: activeUser?.name || (isDemo ? mockUsers.learner.name : 'Learner Officer'),
+    email: activeUser?.email || (isDemo ? mockUsers.learner.email : ''),
+    employeeId: activeUser?.employeeId || (isDemo ? mockUsers.learner.employeeId : 'ID-PENDING'),
+    designation: activeUser?.designation || (isDemo ? mockUsers.learner.designation : 'Statistical Officer'),
+    department: activeUser?.department || (isDemo ? mockUsers.learner.department : 'Ministry of Statistics & Programme Implementation'),
   };
 
-  const [watchHours, setWatchHours] = useState<number>(0.0);
+  const [watchHours, setWatchHours] = useState<number>(isDemo ? 42.5 : 0.0);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [assessmentReminders, setAssessmentReminders] = useState(true);
   const [aiSuggestions, setAiSuggestions] = useState(true);
@@ -53,7 +54,7 @@ export default function LearnerProfilePage() {
     let isMounted = true;
     async function loadStats() {
       try {
-        const stats = await watchTimeService.getUserWatchTime(userId);
+        const stats = await watchTimeService.getUserWatchTime(userId, isDemo);
         if (isMounted) {
           setWatchHours(stats.totalWatchHours);
         }
@@ -69,7 +70,7 @@ export default function LearnerProfilePage() {
       isMounted = false;
       unsub();
     };
-  }, [userId]);
+  }, [userId, isDemo]);
 
   const handleDownloadDossier = () => {
     setIsDossierDownloaded(true);

@@ -27,8 +27,9 @@ import { learnerKeyMetrics, competencyRadarData, prioritySkillGaps, topAiCourseR
 
 export default function LearnerDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading, user, currentUser } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user, currentUser, isDemoMode } = useAuth();
   const activeUser = currentUser || user;
+  const isDemo = isDemoMode || activeUser?.email === 'arjun.kumar@mospi.gov.in';
   const userId = activeUser?.id || '';
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,7 +56,7 @@ export default function LearnerDashboardPage() {
             return;
           }
         } catch {
-          if (isMounted) {
+          if (isMounted && !isDemoMode) {
             router.replace('/onboarding');
             return;
           }
@@ -67,7 +68,7 @@ export default function LearnerDashboardPage() {
           skillGapService.getMySkillGaps().catch(() => null),
           learningPathService.getMyActiveLearningPath().catch(() => null),
           recommendationService.getMyRecommendations(3).catch(() => []),
-          watchTimeService.getUserWatchTime(userId),
+          watchTimeService.getUserWatchTime(userId, isDemo),
         ]);
 
         if (!isMounted) return;
@@ -258,7 +259,7 @@ export default function LearnerDashboardPage() {
       isMounted = false;
       unsubscribe();
     };
-  }, [isAuthenticated, authLoading, userId, router]);
+  }, [isAuthenticated, authLoading, userId, isDemo]);
 
   return (
     <AppShell

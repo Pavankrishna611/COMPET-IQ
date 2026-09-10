@@ -57,7 +57,7 @@ class WatchTimeService {
   /**
    * Fetch and calculate the real authenticated user's watch time and course progress.
    */
-  async getUserWatchTime(userId: string): Promise<UserWatchTimeData> {
+  async getUserWatchTime(userId: string, isDemoUser: boolean = false): Promise<UserWatchTimeData> {
     const local = this.getLocalSession(userId);
 
     try {
@@ -79,17 +79,32 @@ class WatchTimeService {
         isNewUser: combinedHours === 0 && completedModules === 0,
       };
     } catch (err) {
-      // 2. Real metrics fallback for newly registered user without learning path yet
-      const fallbackHours = local.hoursLogged;
-      const fallbackCompleted = local.completedModuleIds.length;
+      // 2. Fallback when learning path is not generated yet (e.g. newly registered user)
+      // Check if user is demo user with no local session
+      if (isDemoUser && local.hoursLogged === 0 && local.completedModuleIds.length === 0) {
+        return {
+          totalWatchHours: 36.5,
+          completedCoursesCount: 2,
+          inProgressCoursesCount: 1,
+          totalCoursesCount: 6,
+          completionRatePercent: 33,
+          recentHoursThisMonth: 8.5,
+          isNewUser: false,
+        };
+      }
+
+      // True newly registered user has 0.0 hours
+      const combinedHours = Number(local.hoursLogged.toFixed(1));
+      const completedModules = local.completedModuleIds.length;
+
       return {
-        totalWatchHours: fallbackHours,
-        completedCoursesCount: fallbackCompleted,
+        totalWatchHours: combinedHours,
+        completedCoursesCount: completedModules,
         inProgressCoursesCount: 0,
-        totalCoursesCount: Math.max(fallbackCompleted, 0),
-        completionRatePercent: 0,
-        recentHoursThisMonth: fallbackHours,
-        isNewUser: fallbackHours === 0 && fallbackCompleted === 0,
+        totalCoursesCount: completedModules,
+        completionRatePercent: completedModules > 0 ? 100 : 0,
+        recentHoursThisMonth: combinedHours,
+        isNewUser: combinedHours === 0 && completedModules === 0,
       };
     }
   }

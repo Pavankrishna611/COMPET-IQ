@@ -3,17 +3,21 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { Role } from '@/types';
 import { Input, Button } from '@/components/ui';
 import { Logo, LandingBackground } from '@/components/common';
 import {
   Lock,
   Mail,
+  User,
+  ShieldCheck,
+  GraduationCap,
   ArrowRight,
   Fingerprint,
 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { loginWithCredentials } = useAuth();
+  const { loginAsRole, loginWithCredentials } = useAuth();
   const [officialId, setOfficialId] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -40,6 +44,15 @@ export default function LoginPage() {
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleSelect = async (role: Role) => {
+    setErrorMessage(null);
+    try {
+      await loginAsRole(role);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Could not sign in with role.');
     }
   };
 
@@ -78,7 +91,7 @@ export default function LoginPage() {
             )}
             <Input
               label="Official ID / Email"
-              placeholder="e.g. your.email@mospi.gov.in"
+              placeholder="e.g. arjun.kumar@mospi.gov.in"
               value={officialId}
               onChange={(e) => setOfficialId(e.target.value)}
               leftIcon={<Mail className="w-4 h-4 text-text-muted" />}
@@ -128,6 +141,17 @@ export default function LoginPage() {
               >
                 Sign In
               </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                className="w-full font-semibold"
+                leftIcon={<Fingerprint className="w-4 h-4 text-primary" />}
+                onClick={() => loginAsRole('learner')}
+              >
+                Continue with SSO (Jan Parichay)
+              </Button>
             </div>
 
             {/* Registration Entry Point */}
@@ -141,6 +165,104 @@ export default function LoginPage() {
               </Link>
             </div>
           </form>
+
+          {/* Divider */}
+          <div className="relative my-6 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <span className="relative bg-white/95 px-3 text-xs uppercase font-bold text-text-muted">
+              OR
+            </span>
+          </div>
+
+          {/* ====================================================
+              DEMO ACCESS SECTION (FRONTEND ONLY MULTI-ROLE ENTRY)
+             ==================================================== */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">
+                Demo Access
+              </h3>
+              <span className="text-[11px] text-teal font-semibold">
+                Click a role to enter directly
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5">
+              {/* Role 1: Learner */}
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('learner')}
+                className="p-3.5 rounded-btn border border-border bg-[#FBFDFE] hover:border-primary hover:bg-primary-light/40 transition-all text-left flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-btn bg-primary-light text-primary flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-colors">
+                  <User className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors">
+                      Learner • Arjun Kumar
+                    </span>
+                    <span className="text-[10px] text-text-muted font-medium uppercase">
+                      Investigator
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+                    View your competencies, skill gaps and personalized learning path.
+                  </p>
+                </div>
+              </button>
+
+              {/* Role 2: Administrator */}
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('admin')}
+                className="p-3.5 rounded-btn border border-border bg-[#FBFDFE] hover:border-primary hover:bg-primary-light/40 transition-all text-left flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-btn bg-teal-light text-teal flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-teal group-hover:text-white transition-colors">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-text-primary group-hover:text-teal transition-colors">
+                      Administrator • Dr. Priya Sharma
+                    </span>
+                    <span className="text-[10px] text-text-muted font-medium uppercase">
+                      Director
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+                    Monitor workforce competency, skill gaps and training analytics.
+                  </p>
+                </div>
+              </button>
+
+              {/* Role 3: Trainer */}
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('trainer')}
+                className="p-3.5 rounded-btn border border-border bg-[#FBFDFE] hover:border-primary hover:bg-primary-light/40 transition-all text-left flex items-start gap-3.5 group"
+              >
+                <div className="w-9 h-9 rounded-btn bg-warning-light text-warning flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-warning group-hover:text-white transition-colors">
+                  <GraduationCap className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-text-primary group-hover:text-warning transition-colors">
+                      Trainer • Rahul Verma
+                    </span>
+                    <span className="text-[10px] text-text-muted font-medium uppercase">
+                      Faculty
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+                    Create competency-based assessments and quizzes.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </main>

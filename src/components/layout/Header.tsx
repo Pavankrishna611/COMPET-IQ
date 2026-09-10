@@ -74,18 +74,17 @@ export function Header({
   className,
 }: HeaderProps) {
   const router = useRouter();
-  const { role, currentUser: authUser, logout } = useAuth();
+  const { role, currentUser: authUser, logout, isDemoMode } = useAuth();
   const activeUser = propUser || authUser || {
     id: 'guest',
-    name: 'Officer',
-    email: '',
-    designation: 'Officer',
-    department: 'Ministry of Statistics & Programme Implementation',
-    cadre: 'Official',
+    name: 'Arjun Kumar',
+    email: 'arjun.kumar@mospi.gov.in',
+    designation: 'Statistical Investigator',
+    department: 'Survey Design and Research Division',
+    cadre: 'SSS',
     role: 'learner',
-    employeeId: '',
-    joinedDate: '',
-    avatarUrl: undefined,
+    employeeId: 'SSS-2021-0892',
+    joinedDate: '2021-07-15',
   };
 
   const currentRole = role || activeUser.role;
@@ -95,6 +94,21 @@ export function Header({
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const fetchRealNotifications = React.useCallback(async () => {
+    if (isDemoMode) {
+      setNotifications(
+        getNotificationsForRole(currentRole).map((n) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          timestamp: n.timestamp,
+          read: n.read,
+          type: n.type,
+          actionUrl: n.actionUrl,
+        }))
+      );
+      return;
+    }
+
     try {
       const data = await notificationService.getNotifications(30);
       if (data && data.items) {
@@ -113,10 +127,20 @@ export function Header({
         );
       }
     } catch {
-      // Fallback to empty notifications if offline or no server connection
-      setNotifications([]);
+      // Fallback to role notifications if offline or error
+      setNotifications(
+        getNotificationsForRole(currentRole).map((n) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          timestamp: n.timestamp,
+          read: n.read,
+          type: n.type,
+          actionUrl: n.actionUrl,
+        }))
+      );
     }
-  }, []);
+  }, [currentRole, isDemoMode]);
 
   // Sync notifications on mount, role change, and periodic poll
   React.useEffect(() => {
@@ -132,10 +156,12 @@ export function Header({
       prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
     );
 
-    try {
-      await notificationService.markAsRead(notif.id);
-    } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+    if (!isDemoMode) {
+      try {
+        await notificationService.markAsRead(notif.id);
+      } catch (err) {
+        console.error('Failed to mark notification as read:', err);
+      }
     }
 
     if (notif.actionUrl) {
@@ -147,10 +173,12 @@ export function Header({
   const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
-    try {
-      await notificationService.markAllAsRead();
-    } catch (err) {
-      console.error('Failed to mark all notifications as read:', err);
+    if (!isDemoMode) {
+      try {
+        await notificationService.markAllAsRead();
+      } catch (err) {
+        console.error('Failed to mark all notifications as read:', err);
+      }
     }
   };
 
@@ -227,8 +255,16 @@ export function Header({
         </div>
       </div>
 
-      {/* Right Area: Search, Notifications, User Identity */}
+      {/* Right Area: Demo Badge, Search, Notifications, User Identity */}
       <div className="flex items-center gap-2 sm:gap-3.5">
+        {/* Demo Mode Indicator Badge - ONLY shown during explicit demo access */}
+        {isDemoMode && (
+          <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-light text-teal border border-teal/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-teal shrink-0 animate-pulse" />
+            Demo Mode
+          </span>
+        )}
+
         {/* Global Search Input with Autocomplete & Dropdown */}
         <GlobalSearchBar className="hidden md:flex" />
 

@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/competiq"
-    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    DATABASE_URL: str = "sqlite:///./competiq.db"
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,https://*.railway.app,https://*.up.railway.app"
 
     # JWT Authentication & Security
     SECRET_KEY: str = "replace_with_secure_random_secret_key_development_32chars"
@@ -35,6 +35,15 @@ class Settings(BaseSettings):
     RAG_TOP_K: int = 5
     RAG_MIN_SIMILARITY: float = 0.35
     RAG_MAX_CONTEXT_CHARS: int = 12000
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, v: Optional[str]) -> str:
+        if not v:
+            return "sqlite:///./competiq.db"
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     @field_validator("SECRET_KEY")
     @classmethod
