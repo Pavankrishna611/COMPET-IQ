@@ -21,7 +21,6 @@ RUN npm ci || npm install
 # 2. Setup Python environment and install backend requirements
 COPY backend/requirements.txt ./backend/
 RUN python3 -m venv /app/backend/venv && \
-    /app/backend/venv/bin/pip install --upgrade pip && \
     /app/backend/venv/bin/pip install -r ./backend/requirements.txt
 
 # 3. Copy full source code
