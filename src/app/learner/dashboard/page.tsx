@@ -55,7 +55,7 @@ export default function LearnerDashboardPage() {
             return;
           }
         } catch {
-          if (isMounted && !isDemoMode) {
+          if (isMounted) {
             router.replace('/onboarding');
             return;
           }

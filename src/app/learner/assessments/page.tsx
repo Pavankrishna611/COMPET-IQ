@@ -33,13 +33,10 @@ import { assessmentService, quizService } from '@/services';
 import type { AssessmentResponse, UserAttemptHistoryItem } from '@/types/api';
 
 export default function LearnerAssessmentsPage() {
-  const { isDemoMode } = useAuth();
   const [activeTab, setActiveTab] = useState<AssessmentTabKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompetency, setSelectedCompetency] = useState('all');
-  const [assessmentsList, setAssessmentsList] = useState<DetailedAssessmentItem[]>(() =>
-    isDemoMode ? mockLearnerAssessments : []
-  );
+  const [assessmentsList, setAssessmentsList] = useState<DetailedAssessmentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -95,29 +92,18 @@ export default function LearnerAssessmentsPage() {
             };
           });
 
-          if (!isDemoMode) {
-            setAssessmentsList(mapped);
-          } else {
-            // Merge with mock in demo mode
-            const apiTitles = new Set(mapped.map((m) => m.title.toLowerCase()));
-            const remainingMock = mockLearnerAssessments.filter(
-              (m) => !apiTitles.has(m.title.toLowerCase())
-            );
-            setAssessmentsList([...mapped, ...remainingMock]);
-          }
+          setAssessmentsList(mapped);
         }
       } catch (err) {
-        console.warn('Using fallback assessments:', err);
-        if (isDemoMode) {
-          setAssessmentsList(mockLearnerAssessments);
-        }
+        console.warn('Could not fetch assessments:', err);
+        setAssessmentsList([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchAssessments();
-  }, [isDemoMode]);
+  }, []);
 
   // Competency options
   const competencies = useMemo(() => {
