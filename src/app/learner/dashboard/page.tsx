@@ -258,7 +258,7 @@ export default function LearnerDashboardPage() {
       isMounted = false;
       unsubscribe();
     };
-  }, [isAuthenticated, authLoading, userId]);
+  }, [isAuthenticated, authLoading, userId, router]);
 
   return (
     <AppShell
