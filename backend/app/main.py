@@ -63,13 +63,13 @@ app = FastAPI(
 ALLOWED_ORIGINS = [
     origin.strip()
     for origin in settings.CORS_ORIGINS.split(",")
-    if origin.strip()
+    if origin.strip() and "*" not in origin
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https?://.*" if ("*" in ALLOWED_ORIGINS or not ALLOWED_ORIGINS) else None,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?|https://.*\.railway\.app|https://.*\.up\.railway\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
