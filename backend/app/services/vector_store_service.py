@@ -21,12 +21,15 @@ class VectorStoreService:
     def get_client(cls):
         """Get or initialize ChromaDB PersistentClient."""
         if cls._client is None:
-            import chromadb
-
-            persist_dir = Path(settings.CHROMA_PERSIST_DIRECTORY)
-            persist_dir.mkdir(parents=True, exist_ok=True)
-            cls._client = chromadb.PersistentClient(path=str(persist_dir))
-            logger.info(f"Initialized ChromaDB PersistentClient at '{persist_dir}'.")
+            try:
+                import chromadb
+                persist_dir = Path(settings.CHROMA_PERSIST_DIRECTORY)
+                persist_dir.mkdir(parents=True, exist_ok=True)
+                cls._client = chromadb.PersistentClient(path=str(persist_dir))
+                logger.info(f"Initialized ChromaDB PersistentClient at '{persist_dir}'.")
+            except Exception as exc:
+                logger.warning(f"ChromaDB persistent client unavailable ({exc}). Using in-memory fallback.")
+                return None
         return cls._client
 
     @classmethod
