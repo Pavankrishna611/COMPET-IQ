@@ -5,13 +5,17 @@ echo "=========================================="
 echo "Starting COMPETIQ Full-Stack Services..."
 echo "=========================================="
 
-# Determine Python path
-if [ -f "/app/backend/venv/bin/python3" ]; then
+# Absolute path to repository root directory
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+echo "Root directory: $ROOT_DIR"
+
+# Determine Python path using absolute paths
+if [ -f "$ROOT_DIR/backend/venv/bin/python3" ]; then
+  PYTHON_BIN="$ROOT_DIR/backend/venv/bin/python3"
+elif [ -f "$ROOT_DIR/backend/venv/bin/python" ]; then
+  PYTHON_BIN="$ROOT_DIR/backend/venv/bin/python"
+elif [ -f "/app/backend/venv/bin/python3" ]; then
   PYTHON_BIN="/app/backend/venv/bin/python3"
-elif [ -f "./backend/venv/bin/python3" ]; then
-  PYTHON_BIN="./backend/venv/bin/python3"
-elif [ -f "./backend/venv/bin/python" ]; then
-  PYTHON_BIN="./backend/venv/bin/python"
 elif command -v python3 >/dev/null 2>&1; then
   PYTHON_BIN="python3"
 elif command -v python >/dev/null 2>&1; then
@@ -22,13 +26,12 @@ else
 fi
 
 echo "Using Python executable: $PYTHON_BIN"
+export PYTHONPATH="$ROOT_DIR/backend:$PYTHONPATH"
 
 # Navigate to backend directory and start FastAPI on 127.0.0.1:8000
 echo "Starting FastAPI backend service on http://127.0.0.1:8000..."
-(
-  cd backend || exit 1
-  $PYTHON_BIN -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-) &
+cd "$ROOT_DIR/backend"
+$PYTHON_BIN -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
 BACKEND_PID=$!
 
 echo "Backend process launched with PID: $BACKEND_PID"
@@ -50,8 +53,11 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
 done
 
 if [ $HEALTHY -eq 0 ]; then
-  echo "Warning: Backend did not report healthy within 30s, continuing frontend start..."
+  echo "Warning: Backend did not report healthy within 30s."
 fi
+
+# Return to root directory
+cd "$ROOT_DIR"
 
 # Cleanup on exit
 trap "echo 'Stopping background processes...'; kill -TERM $BACKEND_PID 2>/dev/null || true; exit" SIGINT SIGTERM EXIT
