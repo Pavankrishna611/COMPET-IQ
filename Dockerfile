@@ -32,11 +32,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 RUN npm run build
 
-# 5. Make startup script executable
-RUN chmod +x ./start.sh
+# 5. Make startup script executable (strip Windows CRLF line endings first)
+RUN sed -i 's/\r$//' ./start.sh && chmod +x ./start.sh
 
 # Expose default public port
 EXPOSE 3000
 
 ENV PORT=3000
-CMD ["./start.sh"]
+CMD ["bash", "./start.sh"]

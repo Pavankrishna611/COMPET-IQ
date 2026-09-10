@@ -10,6 +10,7 @@ cmds = [
 [phases.build]
 cmds = [
   "npm run build",
+  "sed -i 's/\\r$//' start.sh",
   "chmod +x start.sh"
 ]
 
