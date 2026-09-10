@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
+    # SMTP Email Delivery Settings (Optional for real email sending via Gmail / SMTP)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: Optional[str] = None
+    SMTP_FROM_NAME: str = "COMPETIQ Security"
+
     # Document Upload & Processing Settings
     UPLOAD_DIR: str = "uploads/learning_materials"
     MAX_UPLOAD_SIZE_MB: int = 20

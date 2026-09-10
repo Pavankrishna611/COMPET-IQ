@@ -19,6 +19,58 @@ _RESET_CODES: Dict[str, Dict] = {}
 _RESET_TOKENS: Dict[str, Dict] = {}
 
 
+def _send_verification_email(recipient_email: str, recipient_name: str, code: str) -> bool:
+    """Send verification code via SMTP (e.g. Gmail) if credentials are configured in settings."""
+    from app.core.config import settings
+
+    if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
+        logging.getLogger("competiq.auth").info(
+            "SMTP credentials not configured in environment. Skipping email sending (preview mode active)."
+        )
+        return False
+
+    try:
+        import smtplib
+        from email.message import EmailMessage
+
+        msg = EmailMessage()
+        msg["Subject"] = f"{code} is your COMPETIQ Password Reset Verification Code"
+        msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL or settings.SMTP_USERNAME}>"
+        msg["To"] = recipient_email
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 20px; margin: 0;">
+            <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;">
+              <h2 style="color: #1e3a8a; margin-top: 0; font-size: 22px;">COMPETIQ Verification Code</h2>
+              <p style="color: #374151; font-size: 15px; line-height: 1.5;">Hello <strong>{recipient_name}</strong>,</p>
+              <p style="color: #374151; font-size: 15px; line-height: 1.5;">You requested to reset your password for your COMPETIQ account. Please use the following 6-digit verification code:</p>
+              <div style="text-align: center; margin: 28px 0;">
+                <span style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #2563eb; background: #eff6ff; padding: 14px 28px; border-radius: 8px; display: inline-block; border: 1px solid #bfdbfe;">{code}</span>
+              </div>
+              <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">This code will expire in <strong>15 minutes</strong>. If you did not request a password reset, please ignore this email.</p>
+              <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0;" />
+              <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-bottom: 0;">COMPETIQ Learning & Assessment Platform</p>
+            </div>
+          </body>
+        </html>
+        """
+        msg.set_content(f"Your COMPETIQ verification code is: {code}")
+        msg.add_alternative(html_content, subtype="html")
+
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+
+        logging.getLogger("competiq.auth").info(f"Verification code email successfully sent to '{recipient_email}'.")
+        return True
+    except Exception as e:
+        logging.getLogger("competiq.auth").error(f"Failed to send SMTP email to '{recipient_email}': {str(e)}")
+        return False
+
+
 class AuthService:
     """Service handling user registration, credential authentication, and password reset."""
 
@@ -209,11 +261,20 @@ class AuthService:
             f"[PASSWORD RESET VERIFICATION CODE] Code '{code}' generated for user '{user.email}' (expires in 15 mins)."
         )
 
-        return {
+        email_sent = _send_verification_email(
+            recipient_email=user.email,
+            recipient_name=user.full_name or user.email.split("@")[0],
+            code=code,
+        )
+
+        resp = {
             "message": f"Verification code successfully sent to {user.email}",
             "email": user.email,
             "code_preview": code,
         }
+        if email_sent:
+            resp["email_sent"] = True
+        return resp
 
     @staticmethod
     def verify_reset_code(email_or_id: str, code: str) -> Dict[str, str]:
