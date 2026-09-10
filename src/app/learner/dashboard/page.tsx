@@ -27,9 +27,8 @@ import { learnerKeyMetrics, competencyRadarData, prioritySkillGaps, topAiCourseR
 
 export default function LearnerDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading, user, currentUser, isDemoMode } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user, currentUser } = useAuth();
   const activeUser = currentUser || user;
-  const isDemo = isDemoMode || activeUser?.email === 'arjun.kumar@mospi.gov.in';
   const userId = activeUser?.id || '';
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -259,7 +258,7 @@ export default function LearnerDashboardPage() {
       isMounted = false;
       unsubscribe();
     };
-  }, [isAuthenticated, authLoading, userId, isDemo]);
+  }, [isAuthenticated, authLoading, userId]);
 
   return (
     <AppShell
