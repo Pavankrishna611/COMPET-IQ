@@ -29,7 +29,9 @@ class AIAssessmentService {
     formData.append('file', file);
     if (title) formData.append('title', title);
 
-    return apiClient.post<LearningMaterialResponse>('/ai-assessments/materials/upload', formData);
+    return apiClient.post<LearningMaterialResponse>('/ai-assessments/materials/upload', formData, {
+      timeoutMs: 90000,
+    });
   }
 
   /**
@@ -61,7 +63,9 @@ class AIAssessmentService {
     formData.append('file', file);
     if (title) formData.append('title', title);
 
-    return apiClient.post<LearningMaterialResponse>('/ai-assessments/trainer/materials/upload', formData);
+    return apiClient.post<LearningMaterialResponse>('/ai-assessments/trainer/materials/upload', formData, {
+      timeoutMs: 90000,
+    });
   }
 
   /**
@@ -94,7 +98,8 @@ class AIAssessmentService {
   ): Promise<TrainerAssessmentDraftResponse> {
     return apiClient.post<TrainerAssessmentDraftResponse>(
       `/ai-assessments/trainer/materials/${materialId}/generate-assessment`,
-      params || {}
+      params || {},
+      { timeoutMs: 90000 }
     );
   }
 
@@ -200,7 +205,8 @@ class AIAssessmentService {
   ): Promise<GeneratedQuestionsResponse> {
     return apiClient.post<GeneratedQuestionsResponse>(
       `/ai-assessments/materials/${materialId}/generate-practice-quiz`,
-      params || {}
+      params || {},
+      { timeoutMs: 90000 }
     );
   }
 

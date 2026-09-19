@@ -17,7 +17,7 @@ export const API_V1_URL = API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1';
 export const APP_CONFIG = {
   apiBaseUrl: API_BASE_URL,
   apiV1Url: API_V1_URL,
-  requestTimeoutMs: 15000,
+  requestTimeoutMs: 60000,
   tokenStorageKey: 'competiq_access_token',
   roleStorageKey: 'competiq_role',
   userStorageKey: 'competiq_user',

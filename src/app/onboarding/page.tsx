@@ -223,12 +223,10 @@ export default function OnboardingPage() {
       router.push('/onboarding/analysis');
     } catch (err: any) {
       console.error('Failed to save professional profile:', err);
-      setSubmitError(
-        err.detail?.message ||
-        err.detail ||
-        err.message ||
-        'Failed to save your professional profile. Please check your inputs and try again.'
-      );
+      const msg = typeof err?.detail === 'string'
+        ? err.detail
+        : err?.detail?.message || err?.detail?.error || err?.message || 'Failed to save your professional profile. Please check your inputs and try again.';
+      setSubmitError(typeof msg === 'string' ? msg : JSON.stringify(msg));
       setIsSubmitting(false);
     }
   };

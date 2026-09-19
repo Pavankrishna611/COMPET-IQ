@@ -55,6 +55,26 @@ import {
 const MAX_FILE_SIZE_MB = 20;
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.pptx', '.txt'];
 
+function getErrorMessage(err: any, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === 'string') return err;
+  if (typeof err.detail === 'string') return err.detail;
+  if (err.detail && typeof err.detail === 'object') {
+    if (typeof err.detail.message === 'string') return err.detail.message;
+    if (typeof err.detail.error === 'string') return err.detail.error;
+    if (typeof err.detail.detail === 'string') return err.detail.detail;
+    if (Array.isArray(err.detail) && err.detail.length > 0 && err.detail[0].msg) {
+      return err.detail[0].msg;
+    }
+  }
+  if (err.error && typeof err.error === 'object') {
+    if (typeof err.error.message === 'string') return err.error.message;
+  }
+  if (typeof err.error === 'string') return err.error;
+  if (typeof err.message === 'string' && err.message) return err.message;
+  return fallback;
+}
+
 export default function LearnerQuizGeneratorPage() {
   // File selection state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -226,10 +246,10 @@ export default function LearnerQuizGeneratorPage() {
     } catch (err: any) {
       console.error('Upload failed:', err);
       setUploadError(
-        err.detail?.message ||
-        err.detail ||
-        err.message ||
-        'Failed to upload and extract material text. Please ensure the document is valid.'
+        getErrorMessage(
+          err,
+          'Failed to upload and extract material text. Please ensure the document is valid.'
+        )
       );
     } finally {
       setIsUploading(false);
@@ -252,7 +272,7 @@ export default function LearnerQuizGeneratorPage() {
       setMyMaterials((prev) => prev.filter((m) => m.id !== id));
     } catch (err: any) {
       console.error('Failed to delete material:', err);
-      showToast(err.message || 'Failed to delete material.');
+      showToast(getErrorMessage(err, 'Failed to delete material.'));
     }
   };
 
@@ -294,10 +314,10 @@ export default function LearnerQuizGeneratorPage() {
     } catch (err: any) {
       console.error('Quiz generation failed:', err);
       setGenerationError(
-        err.detail?.message ||
-        err.detail ||
-        err.message ||
-        'Failed to generate practice questions from this material. Please try again.'
+        getErrorMessage(
+          err,
+          'Failed to generate practice questions from this material. Please try again.'
+        )
       );
     } finally {
       setIsGenerating(false);
@@ -392,10 +412,10 @@ export default function LearnerQuizGeneratorPage() {
     } catch (err: any) {
       console.error('Quiz submission failed:', err);
       setQuizSubmitError(
-        err.detail?.message ||
-        err.detail ||
-        err.message ||
-        'Failed to submit practice quiz. Please check your network and try again.'
+        getErrorMessage(
+          err,
+          'Failed to submit practice quiz. Please check your network and try again.'
+        )
       );
     } finally {
       setIsSubmittingQuiz(false);
@@ -412,10 +432,10 @@ export default function LearnerQuizGeneratorPage() {
     } catch (err: any) {
       console.error('Failed to load AI feedback:', err);
       setFeedbackError(
-        err.detail?.message ||
-        err.detail ||
-        err.message ||
-        'Failed to synthesize AI learning feedback. Please try again.'
+        getErrorMessage(
+          err,
+          'Failed to synthesize AI learning feedback. Please try again.'
+        )
       );
     } finally {
       setIsLoadingFeedback(false);
